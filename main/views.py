@@ -90,3 +90,26 @@ class CatalogView(TemplateView):
             return TemplateResponse(request, template, context)
         return TemplateResponse(request, self.template_name, context)
 
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = 'main/base.html'
+    slug_field = 'slug'
+    slug_url_kwarg = 'slug'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        product = self.get_object()
+        context['categories'] = Category.objects.all()
+        context['related_products'] = Product.objects.filter(
+            category=product.category
+        ).exclude(id=product.id)[:4]
+        context['current_category'] = product.category.slug
+        return context
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(**kwargs)
+        if request.headers.get('HX-Request'):
+            return TemplateResponse(request, 'main/product_detail.html', context)
+        raise TemplateResponse(request, self.template_name, context)
