@@ -1,0 +1,34 @@
+# Virtual environment
+venv/
+
+# PyCharm IDE
+.idea/
+*.iml
+.idea_modules/
+
+# PyCache
+__pycache__/
+*.py[cod]
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+django.log
+security.log
+debug.log
+
+# Database
+db.sqlite3
+
+# Media files
+media/
+
+# Linter config
+.pylintrc
+
+# VS Code (на всякий случай, если кто-то использует параллельно)
+.vscode/
