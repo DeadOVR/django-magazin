@@ -21,28 +21,50 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <!-- Product Images -->
         <div class="space-y-4">
-            <!-- Main Image -->
-            <div class="aspect-square overflow-hidden bg-gray-100">
-                {% if product.main_image %}
-                    <img src="{{ product.main_image.url }}"
-                         alt="{{ product.name }}"
-                         class="w-full h-full object-cover">
-                {% else %}
-                    <div class="w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span class="text-gray-400">Нет изображения</span>
+            <!-- Main Image with Navigation -->
+            <div class="aspect-square overflow-hidden bg-gray-100 relative group" id="image-gallery">
+                {% if product.images.all %}
+                    {% for image in product.images.all %}
+                        <img class="detail-main-image w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
+                             src="{{ image.image.url }}"
+                             alt="{{ product.name }}"
+                             style="opacity: {% if forloop.first %}1{% else %}0{% endif %};"
+                             data-index="{{ forloop.counter0 }}">
+                    {% endfor %}
+
+                    <!-- Navigation Buttons -->
+                    {% if product.images.all|length > 1 %}
+                    <div class="image-nav absolute inset-0 flex justify-between items-center p-4 pointer-events-none">
+                        <button class="prev-btn bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full w-10 h-10 flex items-center justify-center pointer-events-auto transition-all duration-200 opacity-0 group-hover:opacity-100">
+                            &lsaquo;
+                        </button>
+                        <button class="next-btn bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full w-10 h-10 flex items-center justify-center pointer-events-auto transition-all duration-200 opacity-0 group-hover:opacity-100">
+                            &rsaquo;
+                        </button>
                     </div>
+                    {% endif %}
+                {% else %}
+                    {% if product.main_image %}
+                        <img src="{{ product.main_image.url }}"
+                             alt="{{ product.name }}"
+                             class="w-full h-full object-cover">
+                    {% else %}
+                        <div class="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <span class="text-gray-400">Нет изображения</span>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
 
-            <!-- Additional Images -->
-            {% if product.images.all %}
-            <div class="grid grid-cols-3 gap-2">
+            <!-- Additional Images as Thumbnails -->
+            {% if product.images.all and product.images.all|length > 1 %}
+            <div class="grid grid-cols-4 gap-2" id="thumbnails-container">
                 {% for image in product.images.all %}
-                <div class="aspect-square overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80">
+                <div class="aspect-square overflow-hidden bg-gray-100 cursor-pointer hover:opacity-80 border-2 border-transparent transition-all duration-200 thumbnail"
+                     data-index="{{ forloop.counter0 }}">
                     <img src="{{ image.image.url }}"
                          alt="{{ product.name }}"
-                         class="w-full h-full object-cover"
-                         onclick="changeMainImage(this.src)">
+                         class="w-full h-full object-cover">
                 </div>
                 {% endfor %}
             </div>
@@ -92,9 +114,9 @@
             <!-- Add to Cart -->
             <div class="space-y-4">
                 <button id="add-to-cart-btn"
-                        class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-gray-800 transition-colors"
+                        class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onclick="addToCart()"
-                        {% if not product.product_sizes.all %}disabled{% endif %}>
+                        {% if not product.product_sizes.all or not product.product_sizes.all.0.stock > 0 %}disabled{% endif %}>
                     ДОБАВИТЬ В КОРЗИНУ
                 </button>
 
@@ -148,37 +170,204 @@
                 <div class="text-center">
                     <h3 class="text-sm font-medium text-gray-900 mb-1">{{ related_product.name|upper }}</h3>
                     <p class="text-sm text-gray-600 mb-1">{{ related_product.color|upper }}</p>
-                    <p class="text-sm font-medium">${{ related_product.price }}</p>
+                    <p class="text-sm font-medium">₽{{ related_product.price }}</p>
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
-</main>
 
-<style>
-    .size-radio:checked + label {
-        background-color: black !important;
-        color: white !important;
-        border-color: black !important;
+    <style>
+        .size-radio:checked + label {
+            background-color: black !important;
+            color: white !important;
+            border-color: black !important;
+        }
+        .size-radio:disabled + label {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .thumbnail.active {
+            border-color: black !important;
+        }
+        /* Стили для управления размерами изображений */
+    .detail-main-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* или contain, fill, scale-down */
     }
-    .size-radio:disabled + label {
-        opacity: 0.5;
-        cursor: not-allowed;
+
+    /* Основной контейнер изображения */
+    #image-gallery {
+        max-width: 550px;
+        max-height: 550px;
+        width: 100%;
+        height: 550px;
+        margin: 0 auto;
+        background-color: #f8f9fa;
     }
-</style>
 
-<script>
-    let selectedSize = null;
-    let selectedSizeId = null;
+    /* Основные изображения */
+    .detail-main-image {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important; /* Показываем все изображение */
+        background-color: white;
+    }
 
-    function changeMainImage(src) {
-        const mainImg = document.querySelector('.aspect-square img');
-        if (mainImg) {
-            mainImg.src = src;
+    /* Контейнер для миниатюр */
+    #thumbnails-container {
+        max-width: 550px;
+        margin: 20px auto 0;
+        gap: 12px;
+    }
+
+    /* Миниатюры */
+    .thumbnail {
+        width: 100px;
+        height: 80px;
+        border: 2px solid transparent;
+        transition: all 0.2s ease;
+        background-color: white;
+    }
+
+    .thumbnail img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .thumbnail:hover {
+        border-color: #ddd;
+        transform: scale(1.05);
+    }
+
+    .thumbnail.active {
+        border-color: #000;
+    }
+
+    /* Адаптивность */
+    @media (max-width: 768px) {
+        #image-gallery {
+            height: 400px;
+            max-height: 400px;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 60px;
+        }
+
+        #thumbnails-container {
+            gap: 8px;
         }
     }
+
+    @media (max-width: 480px) {
+        #image-gallery {
+            height: 350px;
+            max-height: 350px;
+        }
+
+        .thumbnail {
+            width: 70px;
+            height: 50px;
+        }
+    }
+    </style>
+
+    <script>
+    // Глобальные переменные для галереи
+    let currentImageIndex = 0;
+    let totalImages = {{ product.images.all|length|default:0 }};
+
+    // Image Gallery Functions
+    function showImage(index) {
+        const images = document.querySelectorAll('.detail-main-image');
+        const thumbnails = document.querySelectorAll('.thumbnail');
+
+        if (images.length === 0) return;
+
+        // Hide all images
+        images.forEach(img => {
+            img.style.opacity = '0';
+        });
+
+        // Show selected image
+        images[index].style.opacity = '1';
+        currentImageIndex = index;
+
+        // Update active thumbnail
+        if (thumbnails.length > 0) {
+            thumbnails.forEach(thumb => {
+                thumb.classList.remove('active');
+                if (parseInt(thumb.dataset.index) === index) {
+                    thumb.classList.add('active');
+                }
+            });
+        }
+    }
+
+    function nextImage() {
+        if (totalImages <= 1) return;
+        currentImageIndex = (currentImageIndex + 1) % totalImages;
+        showImage(currentImageIndex);
+    }
+
+    function prevImage() {
+        if (totalImages <= 1) return;
+        currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
+        showImage(currentImageIndex);
+    }
+
+    // Initialize image gallery
+    function initializeImageGallery() {
+        console.log('Initializing image gallery...');
+
+        // Обновляем totalImages
+        const images = document.querySelectorAll('.detail-main-image');
+        totalImages = images.length;
+        console.log('Total images found:', totalImages);
+
+        if (totalImages > 1) {
+            // Add click events to navigation buttons
+            const nextBtn = document.querySelector('.next-btn');
+            const prevBtn = document.querySelector('.prev-btn');
+
+            if (nextBtn) {
+                nextBtn.onclick = nextImage;
+                console.log('Next button initialized');
+            }
+            if (prevBtn) {
+                prevBtn.onclick = prevImage;
+                console.log('Prev button initialized');
+            }
+
+            // Add click events to thumbnails
+            const thumbnails = document.querySelectorAll('.thumbnail');
+            thumbnails.forEach(thumb => {
+                thumb.onclick = function() {
+                    const index = parseInt(this.dataset.index);
+                    showImage(index);
+                };
+            });
+
+            console.log('Thumbnails initialized:', thumbnails.length);
+
+            // Set first thumbnail as active
+            if (thumbnails.length > 0) {
+                showImage(0);
+            }
+        } else if (totalImages === 1) {
+            // Для одного изображения просто показываем его
+            showImage(0);
+        }
+    }
+
+    // Size Selection Functions
+    let selectedSize = null;
+    let selectedSizeId = null;
 
     function updateSelectedSize() {
         const sizeRadios = document.querySelectorAll('.size-radio');
@@ -186,12 +375,79 @@
         if (checkedRadio) {
             selectedSize = checkedRadio.dataset.size;
             selectedSizeId = checkedRadio.value;
-            console.log('Updated Selected Size:', selectedSize, 'ID:', selectedSizeId);
         } else {
             selectedSize = null;
             selectedSizeId = null;
-            console.log('No valid size selected');
         }
+    }
+
+    function initializeSizeRadios() {
+        const sizeRadios = document.querySelectorAll('.size-radio');
+        const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+        if (sizeRadios.length === 0) {
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+            }
+            return;
+        }
+
+        const availableRadios = Array.from(sizeRadios).filter(radio => !radio.disabled);
+        if (availableRadios.length === 0) {
+            if (addToCartBtn) {
+                addToCartBtn.disabled = true;
+            }
+            return;
+        }
+
+        const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked);
+        if (!checkedRadio || checkedRadio.disabled) {
+            availableRadios[0].checked = true;
+        }
+
+        updateSelectedSize();
+
+        sizeRadios.forEach(radio => {
+            radio.onchange = function() {
+                if (!this.disabled) {
+                    updateSelectedSize();
+                }
+            };
+        });
+    }
+
+    // Add to Cart Function
+    function addToCart() {
+        if (!selectedSizeId) {
+            showNotification('Пожалуйста, выберите размер');
+            return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        fetch('/cart/add/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                product_size_id: selectedSizeId,
+                quantity: 1
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Товар добавлен в корзину');
+            } else {
+                showNotification('Ошибка: ' + (data.message || 'Не удалось добавить товар'));
+            }
+        })
+        .catch(error => {
+            showNotification('Ошибка при добавлении в корзину');
+        });
     }
 
     function getCookie(name) {
@@ -214,9 +470,11 @@
         notification.className = 'fixed top-20 right-4 bg-black text-white px-6 py-3 rounded shadow-lg z-50 transform translate-x-full transition-transform duration-300';
         notification.textContent = message;
         document.body.appendChild(notification);
+
         setTimeout(() => {
             notification.style.transform = 'translateX(0)';
         }, 10);
+
         setTimeout(() => {
             notification.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -225,67 +483,46 @@
         }, 3000);
     }
 
-    function initializeSizeRadios() {
-        const sizeRadios = document.querySelectorAll('.size-radio');
-        const addToCartBtn = document.getElementById('add-to-cart-btn');
-        console.log('Size Radios Found:', sizeRadios.length);
+    // Основная функция инициализации
+    function initializeProductPage() {
+        console.log('Initializing product page...');
 
-        if (sizeRadios.length === 0) {
-            console.log('No size radios available');
-            addToCartBtn.disabled = true;
-            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            showNotification('No sizes available');
-            return;
-        }
+        // Даем время для полной отрисовки DOM
+        setTimeout(() => {
+            initializeImageGallery();
+            initializeSizeRadios();
 
-        const availableRadios = Array.from(sizeRadios).filter(radio => !radio.disabled);
-        console.log('Available Size Radios:', availableRadios.length);
-
-        if (availableRadios.length === 0) {
-            console.log('All sizes are out of stock');
-            addToCartBtn.disabled = true;
-            addToCartBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            showNotification('All sizes are out of stock');
-            return;
-        }
-
-        // Ensure at least one valid radio is checked
-        let checkedRadio = Array.from(sizeRadios).find(radio => radio.checked && !radio.disabled);
-        if (!checkedRadio && availableRadios.length > 0) {
-            availableRadios[0].checked = true;
-            checkedRadio = availableRadios[0];
-            console.log('Auto-checked first available radio:', checkedRadio.dataset.size, 'ID:', checkedRadio.value);
-        }
-
-        // Update selected size
-        updateSelectedSize();
-
-        // Add event listeners
-        sizeRadios.forEach(radio => {
-            radio.addEventListener('change', function(e) {
-                if (this.disabled) {
-                    console.log('Changed disabled radio:', this.dataset.size);
-                    return;
-                }
-                console.log('Radio Changed - Selected Size:', this.dataset.size, 'ID:', this.value);
-                updateSelectedSize();
-                addToCartBtn.disabled = false;
-                addToCartBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            // Product card hover effects
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.transition = 'transform 0.3s ease';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
             });
-        });
+
+            console.log('Product page initialization complete');
+        }, 150); // Увеличена задержка для гарантии загрузки
     }
 
-    document.addEventListener('DOMContentLoaded', initializeSizeRadios);
-    document.addEventListener('htmx:afterSwap', initializeSizeRadios);
+    // Инициализация при разных событиях
+    document.addEventListener('DOMContentLoaded', initializeProductPage);
 
-    const productCards = document.querySelectorAll('.product-card');
-    productCards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-            this.style.transition = 'transform 0.3s ease';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
+    // Специальная обработка для HTMX
+    document.addEventListener('htmx:afterSwap', function(event) {
+        if (event.detail.target.id === 'main-content') {
+            console.log('HTMX content swapped, reinitializing...');
+            // Даем дополнительное время для полной обработки HTMX
+            setTimeout(initializeProductPage, 200);
+        }
     });
+
+    // Также инициализируем при полной загрузке
+    window.addEventListener('load', initializeProductPage);
+
+    // Принудительная инициализация через небольшое время на всякий случай
+    setTimeout(initializeProductPage, 1000);
 </script>
+</main>
