@@ -31,15 +31,39 @@
              hx-get="{% url 'main:product_detail' product.slug %}"
              hx-target="#main-content"
              hx-push-url="true">
-            <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
-                {% if product.main_image %}
-                    <img src="{{ product.main_image.url }}"
-                         alt="{{ product.name }}"
-                         class="product-image w-full h-full object-cover">
-                {% else %}
-                    <div class="product-image w-full h-full bg-gray-200 flex items-center justify-center">
-                        <span class="text-gray-400 text-sm">Нет изображения</span>
-                    </div>
+            <div class="aspect-square overflow-hidden bg-gray-100 mb-4 relative">
+                <!-- Контейнер для изображений -->
+                <div class="image-container w-full h-full relative">
+                    <!-- Все изображения товара -->
+                    {% for image in product.images.all %}
+                        {% if forloop.first %}
+                            <img src="{{ image.image.url }}"
+                                 alt="{{ product.name }}"
+                                 class="product-image {% if forloop.first %}active-image{% endif %} w-full h-full object-contain absolute inset-0 {% if not forloop.first %}opacity-0{% endif %}">
+                        {% else %}
+                            <img src="{{ image.image.url }}"
+                                 alt="{{ product.name }} - вид {{ forloop.counter }}"
+                                 class="product-image w-full h-full object-contain absolute inset-0 opacity-0">
+                        {% endif %}
+                    {% empty %}
+                        <!-- Если нет изображений -->
+                        <div class="product-image active-image w-full h-full bg-gray-200 flex items-center justify-center absolute inset-0">
+                            <span class="text-gray-400 text-sm">Нет изображения</span>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Точки для переключения изображений (только для десктопов) -->
+                {% if product.images.all.count > 1 %}
+                <div class="image-dots absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20 hidden sm:flex">
+                    {% for image in product.images.all %}
+                        <button class="image-dot w-3 h-3 rounded-full bg-white bg-opacity-70 border border-gray-300 transition-all duration-200 {% if forloop.first %}dot-active{% endif %}"
+                                data-image-index="{{ forloop.counter0 }}"
+                                onmouseenter="if(!isMobile()) hoverImage(this, '{{ product.id }}')"
+                                onmouseleave="if(!isMobile()) resetImage('{{ product.id }}')"
+                                onclick="if(!isMobile()) { event.stopPropagation(); switchImage(this, '{{ product.id }}'); }"></button>
+                    {% endfor %}
+                </div>
                 {% endif %}
             </div>
             <div class="text-center">
@@ -71,19 +95,215 @@
     {% endif %}
 </main>
 
+<style>
+    .product-image {
+        transition: opacity 0.2s ease;
+        object-fit: contain;
+        max-width: 100%;
+        max-height: 100%;
+        margin: 0 auto;
+    }
+
+    .image-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f9fafb;
+    }
+
+    .product-card {
+        transition: transform 0.3s ease;
+    }
+
+    .product-card:hover {
+        transform: translateY(-2px);
+    }
+
+    .image-dot {
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .image-dot:hover {
+        transform: scale(1.5);
+        background-color: white;
+        border-color: black;
+    }
+
+    .dot-active {
+        background-color: white !important;
+        transform: scale(1.5);
+        border-color: black !important;
+    }
+
+    .image-dots {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        padding: 4px;
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+    }
+
+    .product-card:hover .image-dots {
+        opacity: 1;
+    }
+
+    /* Скрываем точки на мобильных устройствах */
+    @media (max-width: 767px) {
+        .image-dots {
+            display: none !important;
+        }
+    }
+</style>
+
 <script>
-    // Product card hover and click functionality
+    let activeProductId = null;
+    let activeImageIndex = 0;
+    let hoverTimeout = null;
+
+    // Функция проверки мобильного устройства
+    function isMobile() {
+        return window.innerWidth <= 768; // sm breakpoint
+    }
+
+    function hoverImage(dot, productId) {
+        if (isMobile()) return; // Не работаем на мобильных
+
+        clearTimeout(hoverTimeout);
+
+        const imageIndex = parseInt(dot.getAttribute('data-image-index'));
+        const productCard = dot.closest('.product-card');
+
+        // Показываем изображение при наведении
+        const images = productCard.querySelectorAll('.product-image');
+        images.forEach((img, index) => {
+            if (index === imageIndex) {
+                img.style.opacity = '1';
+            } else {
+                img.style.opacity = '0';
+            }
+        });
+
+        // Подсвечиваем точку при наведении
+        const dots = productCard.querySelectorAll('.image-dot');
+        dots.forEach(d => d.classList.remove('dot-active-hover'));
+        dot.classList.add('dot-active-hover');
+
+        activeProductId = productId;
+    }
+
+    function resetImage(productId) {
+        if (isMobile()) return; // Не работаем на мобильных
+
+        if (activeProductId === productId) {
+            hoverTimeout = setTimeout(() => {
+                const productCard = document.querySelector(`.product-card[data-product-id="${productId}"]`) ||
+                                  document.querySelector('.product-card');
+                if (productCard) {
+                    const images = productCard.querySelectorAll('.product-image');
+                    const dots = productCard.querySelectorAll('.image-dot');
+
+                    // Возвращаем активное изображение
+                    images.forEach((img, index) => {
+                        if (index === activeImageIndex) {
+                            img.style.opacity = '1';
+                        } else {
+                            img.style.opacity = '0';
+                        }
+                    });
+
+                    // Возвращаем активную точку
+                    dots.forEach((dot, index) => {
+                        dot.classList.remove('dot-active-hover');
+                        if (index === activeImageIndex) {
+                            dot.classList.add('dot-active');
+                        } else {
+                            dot.classList.remove('dot-active');
+                        }
+                    });
+                }
+            }, 100);
+        }
+    }
+
+    function switchImage(dot, productId) {
+        if (isMobile()) return; // Не работаем на мобильных
+
+        clearTimeout(hoverTimeout);
+
+        const imageIndex = parseInt(dot.getAttribute('data-image-index'));
+        const productCard = dot.closest('.product-card');
+
+        // Обновляем активную точку
+        const dots = productCard.querySelectorAll('.image-dot');
+        dots.forEach(d => {
+            d.classList.remove('dot-active');
+            d.classList.remove('dot-active-hover');
+        });
+        dot.classList.add('dot-active');
+
+        // Переключаем изображение
+        const images = productCard.querySelectorAll('.product-image');
+        images.forEach((img, index) => {
+            if (index === imageIndex) {
+                img.style.opacity = '1';
+            } else {
+                img.style.opacity = '0';
+            }
+        });
+
+        // Сохраняем активное изображение
+        activeImageIndex = imageIndex;
+        activeProductId = productId;
+    }
+
+    // Инициализация при загрузке страницы
     document.addEventListener('DOMContentLoaded', function() {
         const productCards = document.querySelectorAll('.product-card');
-        productCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-2px)';
-                this.style.transition = 'transform 0.3s ease';
-            });
 
-            card.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
+        productCards.forEach(card => {
+            // Добавляем data-атрибут для идентификации продукта
+            const productName = card.querySelector('h3').textContent;
+            card.setAttribute('data-product-id', productName.replace(/\s+/g, '-').toLowerCase());
+
+            // Убедимся, что первое изображение активно
+            const firstImage = card.querySelector('.product-image');
+            const firstDot = card.querySelector('.image-dot');
+            if (firstImage && firstDot) {
+                firstImage.style.opacity = '1';
+                firstDot.classList.add('dot-active');
+                activeImageIndex = 0;
+            }
+
+            // Добавляем обработчик клика на всю карточку (для HTMX)
+            card.addEventListener('click', function(e) {
+                // Если клик был по точке, не переходим на страницу товара
+                if (e.target.closest('.image-dot')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
             });
+        });
+
+        // Скрываем точки на мобильных устройствах при загрузке
+        if (isMobile()) {
+            document.querySelectorAll('.image-dots').forEach(dot => {
+                dot.style.display = 'none';
+            });
+        }
+
+        // Обновляем при изменении размера окна
+        window.addEventListener('resize', function() {
+            if (isMobile()) {
+                document.querySelectorAll('.image-dots').forEach(dot => {
+                    dot.style.display = 'none';
+                });
+            } else {
+                document.querySelectorAll('.image-dots').forEach(dot => {
+                    dot.style.display = 'flex';
+                });
+            }
         });
     });
 </script>

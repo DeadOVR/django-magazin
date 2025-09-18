@@ -25,7 +25,7 @@
             <div class="aspect-square overflow-hidden bg-gray-100 relative group" id="image-gallery">
                 {% if product.images.all %}
                     {% for image in product.images.all %}
-                        <img class="detail-main-image w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300"
+                        <img class="detail-main-image w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-300 cursor-pointer"
                              src="{{ image.image.url }}"
                              alt="{{ product.name }}"
                              style="opacity: {% if forloop.first %}1{% else %}0{% endif %};"
@@ -47,7 +47,7 @@
                     {% if product.main_image %}
                         <img src="{{ product.main_image.url }}"
                              alt="{{ product.name }}"
-                             class="w-full h-full object-cover">
+                             class="w-full h-full object-cover cursor-pointer">
                     {% else %}
                         <div class="w-full h-full bg-gray-200 flex items-center justify-center">
                             <span class="text-gray-400">Нет изображения</span>
@@ -152,15 +152,16 @@
         <h2 class="text-xl font-bold tracking-tight text-gray-900 mb-8">ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for related_product in related_products %}
-            <div class="product-card group cursor-pointer"
+            <div class="product-card group cursor-pointer relative overflow-hidden"
                  hx-get="{% url 'main:product_detail' related_product.slug %}"
                  hx-target="#main-content"
-                 hx-push-url="true">
+                 hx-push-url="true"
+                 onclick="smoothScrollToTop(this)">
                 <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
                     {% if related_product.main_image %}
                         <img src="{{ related_product.main_image.url }}"
                              alt="{{ related_product.name }}"
-                             class="product-image w-full h-full object-cover">
+                             class="product-image w-full h-full object-cover transition-transform duration-700 group-hover:scale-105">
                     {% else %}
                         <div class="product-image w-full h-full bg-gray-200 flex items-center justify-center">
                             <span class="text-gray-400 text-sm">Нет изображения</span>
@@ -172,11 +173,42 @@
                     <p class="text-sm text-gray-600 mb-1">{{ related_product.color|upper }}</p>
                     <p class="text-sm font-medium">₽{{ related_product.price }}</p>
                 </div>
+
+                <!-- Overlay effect -->
+                <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
             </div>
             {% endfor %}
         </div>
     </div>
     {% endif %}
+
+    <!-- Image Overlay -->
+    <div id="image-overlay" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden">
+        <div class="relative w-full h-full flex items-center justify-center">
+            <button id="close-overlay" class="absolute top-4 right-4 text-white text-3xl z-50 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-70 transition-colors">
+                &times;
+            </button>
+
+            {% if product.images.all|length > 1 %}
+            <button id="prev-overlay" class="absolute left-4 text-white text-3xl z-50 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-70 transition-colors">
+                &lsaquo;
+            </button>
+            <button id="next-overlay" class="absolute right-4 text-white text-3xl z-50 bg-black bg-opacity-50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-opacity-70 transition-colors">
+                &rsaquo;
+            </button>
+            {% endif %}
+
+            <div class="relative w-full h-full flex items-center justify-center p-8">
+                <img id="overlay-image" src="" alt="" class="max-w-full max-h-full object-contain">
+            </div>
+
+            {% if product.images.all|length > 1 %}
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded-full">
+                <span id="image-counter">1 / {{ product.images.all|length }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 
     <style>
         .size-radio:checked + label {
@@ -191,96 +223,149 @@
         .thumbnail.active {
             border-color: black !important;
         }
+
         /* Стили для управления размерами изображений */
-    .detail-main-image {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: cover !important; /* или contain, fill, scale-down */
-    }
+        .detail-main-image {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
 
-    /* Основной контейнер изображения */
-    #image-gallery {
-        max-width: 550px;
-        max-height: 550px;
-        width: 100%;
-        height: 550px;
-        margin: 0 auto;
-        background-color: #f8f9fa;
-    }
-
-    /* Основные изображения */
-    .detail-main-image {
-        width: 100% !important;
-        height: 100% !important;
-        object-fit: contain !important; /* Показываем все изображение */
-        background-color: white;
-    }
-
-    /* Контейнер для миниатюр */
-    #thumbnails-container {
-        max-width: 550px;
-        margin: 20px auto 0;
-        gap: 12px;
-    }
-
-    /* Миниатюры */
-    .thumbnail {
-        width: 100px;
-        height: 80px;
-        border: 2px solid transparent;
-        transition: all 0.2s ease;
-        background-color: white;
-    }
-
-    .thumbnail img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .thumbnail:hover {
-        border-color: #ddd;
-        transform: scale(1.05);
-    }
-
-    .thumbnail.active {
-        border-color: #000;
-    }
-
-    /* Адаптивность */
-    @media (max-width: 768px) {
+        /* Основной контейнер изображения */
         #image-gallery {
-            height: 400px;
-            max-height: 400px;
+            max-width: 550px;
+            max-height: 550px;
+            width: 100%;
+            height: 550px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
         }
 
-        .thumbnail {
-            width: 80px;
-            height: 60px;
+        /* Основные изображения */
+        .detail-main-image {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+            background-color: white;
         }
 
+        /* Контейнер для миниатюр */
         #thumbnails-container {
-            gap: 8px;
-        }
-    }
-
-    @media (max-width: 480px) {
-        #image-gallery {
-            height: 350px;
-            max-height: 350px;
+            max-width: 550px;
+            margin: 20px auto 0;
+            gap: 12px;
         }
 
+        /* Миниатюры */
         .thumbnail {
-            width: 70px;
-            height: 50px;
+            width: 100px;
+            height: 80px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            background-color: white;
         }
-    }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail:hover {
+            border-color: #ddd;
+            transform: scale(1.05);
+        }
+
+        .thumbnail.active {
+            border-color: #000;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            #image-gallery {
+                height: 400px;
+                max-height: 400px;
+            }
+
+            .thumbnail {
+                width: 80px;
+                height: 60px;
+            }
+
+            #thumbnails-container {
+                gap: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #image-gallery {
+                height: 350px;
+                max-height: 350px;
+            }
+
+            .thumbnail {
+                width: 70px;
+                height: 50px;
+            }
+        }
+
+        /* Overlay Styles */
+        #image-overlay {
+            transition: opacity 0.3s ease;
+        }
+
+        #image-overlay:not(.hidden) {
+            display: block !important;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        #overlay-image {
+            transition: transform 0.3s ease;
+        }
+
+        #overlay-image.zoomed {
+            transform: scale(1.5);
+            cursor: zoom-out;
+        }
+
+        /* Дополнительные стили для анимации карточек */
+        .product-card {
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            z-index: 10;
+        }
+
+        .product-image {
+            transition: transform 0.7s ease;
+        }
     </style>
 
     <script>
+    // Функция для плавного скролла к верху страницы
+    function smoothScrollToTop(element) {
+        // Предотвращаем немедленный переход, даем время для анимации
+        setTimeout(() => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }, 300); // Задержка для визуального эффекта нажатия
+    }
+
     // Глобальные переменные для галереи
     let currentImageIndex = 0;
     let totalImages = {{ product.images.all|length|default:0 }};
+    let isOverlayOpen = false;
+    let isImageZoomed = false;
 
     // Image Gallery Functions
     function showImage(index) {
@@ -307,42 +392,101 @@
                 }
             });
         }
+
+        // Обновляем изображение в оверлее, если он открыт
+        if (isOverlayOpen) {
+            updateOverlayImage();
+        }
     }
 
     function nextImage() {
         if (totalImages <= 1) return;
         currentImageIndex = (currentImageIndex + 1) % totalImages;
         showImage(currentImageIndex);
+        updateOverlayCounter();
     }
 
     function prevImage() {
         if (totalImages <= 1) return;
         currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
         showImage(currentImageIndex);
+        updateOverlayCounter();
+    }
+
+    // Функции для полноэкранного просмотра
+    function openImageOverlay() {
+        if (totalImages === 0) return;
+
+        const overlay = document.getElementById('image-overlay');
+        const overlayImage = document.getElementById('overlay-image');
+        const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]') ||
+                            document.querySelector('.detail-main-image');
+
+        if (!currentImage) return;
+
+        // Устанавливаем исходное изображение
+        overlayImage.src = currentImage.src;
+        overlayImage.alt = currentImage.alt;
+
+        // Показываем оверлей
+        overlay.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        isOverlayOpen = true;
+
+        // Обновляем счетчик
+        updateOverlayCounter();
+
+        // Сбрасываем зум
+        isImageZoomed = false;
+        overlayImage.classList.remove('zoomed');
+    }
+
+    function closeImageOverlay() {
+        const overlay = document.getElementById('image-overlay');
+        overlay.classList.add('hidden');
+        document.body.style.overflow = '';
+        isOverlayOpen = false;
+    }
+
+    function updateOverlayCounter() {
+        if (totalImages <= 1) return;
+
+        const counter = document.getElementById('image-counter');
+        if (counter) {
+            counter.textContent = `${currentImageIndex + 1} / ${totalImages}`;
+        }
+    }
+
+    function updateOverlayImage() {
+        const overlayImage = document.getElementById('overlay-image');
+        const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]');
+
+        if (currentImage && overlayImage) {
+            overlayImage.src = currentImage.src;
+            updateOverlayCounter();
+        }
+    }
+
+    function toggleZoom() {
+        const overlayImage = document.getElementById('overlay-image');
+        if (!overlayImage) return;
+
+        isImageZoomed = !isImageZoomed;
+        overlayImage.classList.toggle('zoomed', isImageZoomed);
     }
 
     // Initialize image gallery
     function initializeImageGallery() {
-        console.log('Initializing image gallery...');
-
-        // Обновляем totalImages
         const images = document.querySelectorAll('.detail-main-image');
         totalImages = images.length;
-        console.log('Total images found:', totalImages);
 
         if (totalImages > 1) {
             // Add click events to navigation buttons
             const nextBtn = document.querySelector('.next-btn');
             const prevBtn = document.querySelector('.prev-btn');
 
-            if (nextBtn) {
-                nextBtn.onclick = nextImage;
-                console.log('Next button initialized');
-            }
-            if (prevBtn) {
-                prevBtn.onclick = prevImage;
-                console.log('Prev button initialized');
-            }
+            if (nextBtn) nextBtn.onclick = nextImage;
+            if (prevBtn) prevBtn.onclick = prevImage;
 
             // Add click events to thumbnails
             const thumbnails = document.querySelectorAll('.thumbnail');
@@ -353,16 +497,93 @@
                 };
             });
 
-            console.log('Thumbnails initialized:', thumbnails.length);
-
             // Set first thumbnail as active
             if (thumbnails.length > 0) {
                 showImage(0);
             }
         } else if (totalImages === 1) {
-            // Для одного изображения просто показываем его
             showImage(0);
         }
+
+        // Добавляем обработчик клика для открытия изображения
+        const gallery = document.getElementById('image-gallery');
+        if (gallery) {
+            gallery.addEventListener('click', function(e) {
+                if (!e.target.classList.contains('prev-btn') &&
+                    !e.target.classList.contains('next-btn') &&
+                    !e.target.closest('.image-nav')) {
+                    openImageOverlay();
+                }
+            });
+        }
+
+        // Также добавляем обработчик напрямую к изображениям
+        const mainImages = document.querySelectorAll('.detail-main-image');
+        mainImages.forEach(img => {
+            img.addEventListener('click', openImageOverlay);
+        });
+
+        // Инициализация обработчиков оверлея
+        const closeOverlay = document.getElementById('close-overlay');
+        const prevOverlay = document.getElementById('prev-overlay');
+        const nextOverlay = document.getElementById('next-overlay');
+        const overlayImage = document.getElementById('overlay-image');
+
+        if (closeOverlay) {
+            closeOverlay.addEventListener('click', closeImageOverlay);
+        }
+
+        if (prevOverlay) {
+            prevOverlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                prevImage();
+            });
+        }
+
+        if (nextOverlay) {
+            nextOverlay.addEventListener('click', function(e) {
+                e.stopPropagation();
+                nextImage();
+            });
+        }
+
+        if (overlayImage) {
+            overlayImage.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleZoom();
+            });
+        }
+
+        // Закрытие оверлея по клику на фон
+        const overlay = document.getElementById('image-overlay');
+        if (overlay) {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeImageOverlay();
+                }
+            });
+        }
+
+        // Обработка клавиш
+        document.addEventListener('keydown', function(e) {
+            if (!isOverlayOpen) return;
+
+            switch(e.key) {
+                case 'Escape':
+                    closeImageOverlay();
+                    break;
+                case 'ArrowLeft':
+                    if (totalImages > 1) prevImage();
+                    break;
+                case 'ArrowRight':
+                    if (totalImages > 1) nextImage();
+                    break;
+                case ' ':
+                    e.preventDefault();
+                    toggleZoom();
+                    break;
+            }
+        });
     }
 
     // Size Selection Functions
@@ -386,17 +607,13 @@
         const addToCartBtn = document.getElementById('add-to-cart-btn');
 
         if (sizeRadios.length === 0) {
-            if (addToCartBtn) {
-                addToCartBtn.disabled = true;
-            }
+            if (addToCartBtn) addToCartBtn.disabled = true;
             return;
         }
 
         const availableRadios = Array.from(sizeRadios).filter(radio => !radio.disabled);
         if (availableRadios.length === 0) {
-            if (addToCartBtn) {
-                addToCartBtn.disabled = true;
-            }
+            if (addToCartBtn) addToCartBtn.disabled = true;
             return;
         }
 
@@ -409,9 +626,7 @@
 
         sizeRadios.forEach(radio => {
             radio.onchange = function() {
-                if (!this.disabled) {
-                    updateSelectedSize();
-                }
+                if (!this.disabled) updateSelectedSize();
             };
         });
     }
@@ -485,9 +700,6 @@
 
     // Основная функция инициализации
     function initializeProductPage() {
-        console.log('Initializing product page...');
-
-        // Даем время для полной отрисовки DOM
         setTimeout(() => {
             initializeImageGallery();
             initializeSizeRadios();
@@ -495,34 +707,34 @@
             // Product card hover effects
             document.querySelectorAll('.product-card').forEach(card => {
                 card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-2px)';
-                    this.style.transition = 'transform 0.3s ease';
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
+                    this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+                    this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
                 });
                 card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
+                    this.style.transform = 'translateY(0) scale(1)';
+                    this.style.boxShadow = 'none';
+                });
+
+                // Анимация нажатия
+                card.addEventListener('mousedown', function() {
+                    this.style.transform = 'translateY(-4px) scale(0.98)';
+                });
+                card.addEventListener('mouseup', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.02)';
                 });
             });
-
-            console.log('Product page initialization complete');
-        }, 150); // Увеличена задержка для гарантии загрузки
+        }, 150);
     }
 
-    // Инициализация при разных событиях
+    // Инициализация
     document.addEventListener('DOMContentLoaded', initializeProductPage);
-
-    // Специальная обработка для HTMX
     document.addEventListener('htmx:afterSwap', function(event) {
         if (event.detail.target.id === 'main-content') {
-            console.log('HTMX content swapped, reinitializing...');
-            // Даем дополнительное время для полной обработки HTMX
             setTimeout(initializeProductPage, 200);
         }
     });
-
-    // Также инициализируем при полной загрузке
     window.addEventListener('load', initializeProductPage);
-
-    // Принудительная инициализация через небольшое время на всякий случай
     setTimeout(initializeProductPage, 1000);
-</script>
+    </script>
 </main>
