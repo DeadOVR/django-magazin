@@ -8,8 +8,9 @@ from .models import Category, Product, Size
 from django.db.models import Q
 
 
+
 class IndexView(TemplateView):
-    template_name = 'main/base.html'
+    template_name = 'main/index.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -25,7 +26,7 @@ class IndexView(TemplateView):
 
 
 class CatalogView(TemplateView):
-    template_name = 'main/catalog.html'  # Измените template на template_name
+    template_name = 'main/catalog.html'
 
     FILTER_MAPPING = {
         'color': lambda queryset, value: queryset.filter(color__iexact=value),
@@ -82,16 +83,15 @@ class CatalogView(TemplateView):
         context = self.get_context_data(**kwargs)
 
         if request.headers.get('HX-Request'):
-            # HTMX запросы - возвращаем частичные шаблоны
-            if context.get('show_search'):
-                return TemplateResponse(request, 'main/search_input.html', context)
-            elif context.get('reset_search'):
-                return TemplateResponse(request, 'main/search_button.html', {})
-            template = 'main/filter_modal.html' if request.GET.get('show_filters') == 'true' else 'main/catalog.html'
-            return TemplateResponse(request, template, context)
+            # HTMX запросы - возвращаем ЧАСТИЧНЫЕ шаблоны
+            if request.GET.get('show_filters') == 'true':
+                return TemplateResponse(request, 'main/filter_modal.html', context)
+            else:
+                # Возвращаем только контент БЕЗ наследования
+                return TemplateResponse(request, 'main/catalog_content.html', context)
         else:
-            # ОБЫЧНЫЕ запросы - возвращаем ПОЛНУЮ страницу каталога
-            return TemplateResponse(request, 'main/catalog.html', context)
+            # ОБЫЧНЫЕ запросы - возвращаем ПОЛНУЮ страницу
+            return TemplateResponse(request, self.template_name, context)
 
 
 class ProductDetailView(DetailView):

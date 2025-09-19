@@ -1,0 +1,259 @@
+{% load static %}
+<!-- Mobile Menu Overlay -->
+<div id="overlay" class="overlay fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"></div>
+
+<!-- Mobile Menu -->
+<div id="mobileMenu" class="mobile-menu fixed top-0 left-0 w-4/5 max-w-xs h-full bg-white z-50 md:hidden shadow-lg">
+    <div class="p-4 sm:p-6">
+        <div class="flex justify-between items-center mb-6 sm:mb-8">
+            <h2 class="text-base sm:text-lg font-bold tracking-tight">
+                ENFANTS RICHES <br>
+                DÉPRIMÉS
+            </h2>
+            <button id="closeMenu" class="hamburger active">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <!-- Мобильный поиск -->
+        <div class="mobile-search-container" x-data="{ mobileQuery: '', mobileResults: [], mobileLoading: false, mobileError: null }">
+            <form @submit.prevent="if(mobileQuery.trim()) { window.location.href = '{% url 'main:search' %}?q=' + encodeURIComponent(mobileQuery.trim()) }">
+                <div class="mobile-search-form">
+                    <input type="text"
+                           x-model="mobileQuery"
+                           @input.debounce.300ms="
+                               if(mobileQuery.trim()) {
+                                   mobileLoading = true;
+                                   mobileError = null;
+                                   $nextTick(() => {
+                                       fetch('{% url 'main:search_suggestions' %}?q=' + encodeURIComponent(mobileQuery.trim()))
+                                           .then(response => {
+                                               if (!response.ok) throw new Error('Server error');
+                                               return response.json();
+                                           })
+                                           .then(data => {
+                                               mobileResults = data.results || [];
+                                               mobileLoading = false;
+                                           })
+                                           .catch(error => {
+                                               console.error('Search error:', error);
+                                               mobileLoading = false;
+                                               mobileResults = [];
+                                               mobileError = 'Ошибка поиска';
+                                           });
+                                   });
+                               } else {
+                                   mobileResults = [];
+                                   mobileLoading = false;
+                                   mobileError = null;
+                               }
+                           "
+                           placeholder="Поиск товаров..."
+                           class="mobile-search-input">
+                    <button type="submit" class="mobile-search-button">
+                        Найти
+                    </button>
+                </div>
+            </form>
+
+            <div x-show="mobileLoading" class="text-center py-4">
+                <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+            </div>
+
+            <div x-show="!mobileLoading && mobileResults.length > 0" class="mt-2 max-h-60 overflow-y-auto">
+                <template x-for="product in mobileResults.slice(0, 5)" :key="product.id">
+                    <template x-if="product && product.slug">
+                        <a :href="'/product/' + product.slug + '/'"
+                           class="search-result-item block py-2 px-3 hover:bg-gray-100 rounded-md transition-colors">
+                            <div class="flex items-center space-x-3">
+                                <img :src="product.image || '/static/images/default-product.jpg'"
+                                     :alt="product.name"
+                                     class="w-10 h-10 object-cover rounded"
+                                     onerror="this.src='/static/images/default-product.jpg'">
+                                <div class="flex-1 min-w-0">
+                                    <div class="search-result-name text-sm font-medium text-gray-900 truncate"
+                                         x-text="product.name"></div>
+                                    <div class="search-result-price text-sm text-gray-500"
+                                         x-text="(product.price || '0') + '₽'"></div>
+                                </div>
+                            </div>
+                        </a>
+                    </template>
+                </template>
+                <a :href="'{% url 'main:search' %}?q=' + encodeURIComponent(mobileQuery.trim())"
+                   class="view-all-results block text-center py-2 text-sm text-blue-600 hover:text-blue-800">
+                    Все результаты поиска →
+                </a>
+            </div>
+
+            <div x-show="!mobileLoading && mobileError" x-text="mobileError" class="text-red-500 text-sm py-2"></div>
+        </div>
+
+        <nav class="space-y-4 sm:space-y-6 mt-4">
+            <a href="{% url 'main:index' %}"
+               class="mobile-nav-link block text-base sm:text-lg font-medium text-gray-900 hover:text-gray-700 py-2 border-b border-gray-200">
+               ГЛАВНАЯ
+            </a>
+            {% for category in categories %}
+            <a href="{% url 'main:catalog' category.slug %}"
+               class="mobile-nav-link block text-base sm:text-lg font-medium text-gray-900 hover:text-gray-700 py-2 border-b border-gray-200 {% if current_category == category.slug %}active{% endif %}">
+               {{ category.name|upper }}
+            </a>
+            {% endfor %}
+        </nav>
+
+        <div class="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+            <a class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
+                АККАУНТ
+            </a>
+            <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
+        </div>
+    </div>
+</div>
+
+<!-- Header -->
+<header class="sticky top-0 bg-white z-30" style="padding-left: var(--safe-area-inset-left); padding-right: var(--safe-area-inset-right);">
+    <div class="mx-auto px-3 xs:px-4 sm:px-5 lg:px-8 xl-container">
+        <div class="flex justify-between items-center h-14 sm:h-16">
+            <!-- Mobile Menu Button -->
+            <button id="menuToggle" class="hamburger md:hidden">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <!-- Logo -->
+            <div class="flex-shrink-0">
+                <a href="{% url 'main:index' %}">
+                    <h1 class="text-xs xs:text-sm sm:text-base md:text-lg font-bold tracking-tight text-left logo-text">
+                        ENFANTS RICHES<br>
+                        DÉPRIMÉS
+                    </h1>
+                </a>
+            </div>
+
+            <!-- Desktop Navigation -->
+            <nav class="hidden md:flex space-x-4 lg:space-x-6 xl:space-x-8">
+                {% for category in categories %}
+                <a href="{% url 'main:catalog' category.slug %}"
+                   class="nav-link text-xs xs:text-sm lg:text-base font-medium text-gray-900 hover:text-gray-700 {% if current_category == category.slug %}active{% endif %}">
+                   {{ category.name|upper }}
+                </a>
+                {% endfor %}
+            </nav>
+
+            <!-- Right side links -->
+            <div class="hidden md:flex items-center space-x-4 lg:space-x-6">
+                <!-- Search -->
+                <div class="search-container"
+                     x-data="{ open: false, query: '', results: [], loading: false, error: null, dropdownClass: '' }"
+                     @click.outside="open = false"
+                     x-init="dropdownClass = getDropdownClass(); $watch('open', value => { if(value) { dropdownClass = getDropdownClass(); } })">
+
+                    <button @click="open = !open"
+                            class="text-xs xs:text-sm lg:text-base font-medium uppercase hover:text-gray-600 adaptive-text">
+                        ПОИСК
+                    </button>
+
+                    <div x-show="open" x-transition class="search-dropdown" :class="dropdownClass" style="display: none;">
+                        <div class="search-inputs-container">
+                            <form @submit.prevent="if(query.trim()) { window.location.href = '{% url 'main:search' %}?q=' + encodeURIComponent(query.trim()) }">
+                                <div class="search-input-flex">
+                                    <input type="text"
+                                           x-model="query"
+                                           @input.debounce.300ms="
+                                               if(query.trim()) {
+                                                   loading = true;
+                                                   error = null;
+                                                   $nextTick(() => {
+                                                       fetch('{% url 'main:search_suggestions' %}?q=' + encodeURIComponent(query.trim()))
+                                                           .then(response => {
+                                                               if (!response.ok) throw new Error('Server error');
+                                                               return response.json();
+                                                           })
+                                                           .then(data => {
+                                                               results = data.results || [];
+                                                               loading = false;
+                                                           })
+                                                           .catch(error => {
+                                                               console.error('Search error:', error);
+                                                               loading = false;
+                                                               results = [];
+                                                               error = 'Ошибка поиска';
+                                                           });
+                                                   });
+                                               } else {
+                                                   results = [];
+                                                   loading = false;
+                                                   error = null;
+                                               }
+                                           "
+                                           placeholder="Поиск товаров..."
+                                           class="search-input">
+                                    <button type="submit" class="search-button">
+                                        Найти
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div x-show="error" x-text="error" class="text-red-500 text-sm py-2 px-4"></div>
+
+                        <div x-show="loading" class="text-center py-4">
+                            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                        </div>
+
+                        <div x-show="!loading && results.length > 0">
+                            <div class="max-h-60 overflow-y-auto">
+                                <template x-for="product in results.slice(0, 5)" :key="product.id">
+                                    <template x-if="product && product.slug">
+                                        <a :href="'/product/' + product.slug + '/'"
+                                           class="search-result-item block py-2 px-3 hover:bg-gray-100 rounded-md transition-colors">
+                                            <div class="flex items-center space-x-3">
+                                                <img :src="product.image || '/static/images/default-product.jpg'"
+                                                     :alt="product.name"
+                                                     class="w-10 h-10 object-cover rounded"
+                                                     onerror="this.src='/static/images/default-product.jpg'">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="search-result-name text-sm font-medium text-gray-900 truncate"
+                                                         x-text="product.name"></div>
+                                                    <div class="search-result-price text-sm text-gray-500"
+                                                         x-text="(product.price || '0') + '₽'"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </template>
+                                </template>
+                            </div>
+                            <a :href="'{% url 'main:search' %}?q=' + encodeURIComponent(query.trim())"
+                               class="view-all-results block text-center py-2 text-sm text-blue-600 hover:text-blue-800">
+                                Все результаты поиска →
+                            </a>
+                        </div>
+
+                        <div x-show="!loading && !error && query.trim() && results.length === 0" class="no-results text-center py-4 text-gray-500">
+                            Ничего не найдено
+                        </div>
+
+                        <div x-show="!loading && !error && !query.trim()" class="no-results text-center py-4 text-gray-500">
+                            Введите поисковый запрос
+                        </div>
+                    </div>
+                </div>
+
+                <a class="text-xs xs:text-sm lg:text-base font-medium text-gray-900 uppercase hover:text-gray-600 adaptive-text">
+                    АККАУНТ
+                </a>
+                <a href="#" id="desktopCart" class="text-xs xs:text-sm lg:text-base font-medium text-gray-900 hover:text-gray-700 adaptive-text">КОРЗИНА (0)</a>
+            </div>
+
+            <!-- Mobile Cart Icon -->
+            <div class="md:hidden">
+                <a href="#" id="mobileCartHeader" class="text-xs font-medium text-gray-900 adaptive-text">КОРЗИНА (0)</a>
+            </div>
+        </div>
+    </div>
+</header>
+<div id="cart-container"></div>
