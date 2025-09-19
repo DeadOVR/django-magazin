@@ -20,7 +20,6 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            /* Добавляем отступы для безопасных зон на современных устройствах */
             padding-left: var(--safe-area-inset-left);
             padding-right: var(--safe-area-inset-right);
         }
@@ -62,7 +61,6 @@
         .mobile-menu {
             transform: translateX(-100%);
             transition: transform 0.3s ease-in-out;
-            /* Учитываем безопасные зоны на iPhone X и новее */
             padding-top: var(--safe-area-inset-top);
             padding-left: var(--safe-area-inset-left);
             padding-right: var(--safe-area-inset-right);
@@ -110,6 +108,85 @@
             visibility: visible;
         }
 
+        /* Search styles */
+        .search-container {
+            position: relative;
+            display: inline-block;
+        }
+
+        .search-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            z-index: 50;
+            margin-top: 0.5rem;
+        }
+
+        .search-result-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.2s;
+        }
+
+        .search-result-item:hover {
+            background-color: #f9fafb;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            margin-right: 0.75rem;
+            border-radius: 0.25rem;
+        }
+
+        .search-result-info {
+            flex: 1;
+        }
+
+        .search-result-name {
+            font-weight: 500;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .search-result-price {
+            font-size: 0.875rem;
+            color: #374151;
+        }
+
+        .no-results {
+            padding: 1rem;
+            text-align: center;
+            color: #6b7280;
+        }
+
+        .view-all-results {
+            display: block;
+            padding: 0.75rem;
+            text-align: center;
+            background-color: #f9fafb;
+            color: #374151;
+            font-weight: 500;
+            border-top: 1px solid #e5e7eb;
+            transition: background-color 0.2s;
+        }
+
+        .view-all-results:hover {
+            background-color: #f3f4f6;
+        }
+
         /* HTMX loading indicator */
         .htmx-indicator {
             opacity: 0;
@@ -145,6 +222,11 @@
                 padding-left: 0.75rem;
                 padding-right: 0.75rem;
             }
+
+            .search-dropdown {
+                width: 280px;
+                right: -50px;
+            }
         }
 
         @media (min-width: 1920px) {
@@ -169,6 +251,12 @@
             .mobile-leading-tight {
                 line-height: 1.25;
             }
+
+            .search-dropdown {
+                width: 100vw;
+                right: -100px;
+                left: auto;
+            }
         }
 
         /* Адаптивные изображения */
@@ -184,6 +272,27 @@
 
         .responsive-subheading {
             font-size: clamp(1rem, 2.5vw, 1.5rem);
+        }
+
+        /* Search input styles */
+        .search-input {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-button {
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            background-color: #000;
+            color: white;
         }
     </style>
 </head>
@@ -226,7 +335,18 @@
             </nav>
 
             <div class="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
-                <a href="#" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">ПОИСК</a>
+                <!-- Mobile Search -->
+                <div class="px-2 py-3">
+                    <form action="{% url 'main:search' %}" method="GET" class="flex space-x-2">
+                        <input type="text"
+                               name="q"
+                               placeholder="Поиск товаров..."
+                               class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-black">
+                        <button type="submit" class="px-4 py-2 bg-black text-white text-sm rounded-md hover:bg-gray-800 transition-colors">
+                            Найти
+                        </button>
+                    </form>
+                </div>
 
                 <a class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
                     АККАУНТ
@@ -275,15 +395,104 @@
 
                 <!-- Right side links -->
                 <div class="hidden md:flex items-center space-x-4 lg:space-x-6">
-                    <div class="relative" id="mobile-search-wrapper">
-                        <button id="mobile-search-toggle"
-                                hx-get="{% url 'main:catalog_all' %}?show_search=true"
-                                hx-target="#mobile-search-wrapper"
-                                hx-swap="innerHTML"
-                                class="text-xs xs:text-sm lg:text-base font-medium uppercase hover:text-gray-600 adaptive-text">
-                            ПОИСК
-                        </button>
+                    <!-- Search -->
+                                    <div class="search-container" x-data="{ open: false, query: '', results: [], loading: false, error: null }"
+                     @click.outside="open = false">
+                    <button @click="open = !open"
+                            class="text-xs xs:text-sm lg:text-base font-medium uppercase hover:text-gray-600 adaptive-text">
+                        ПОИСК
+                    </button>
+
+                    <div x-show="open" x-transition class="search-dropdown p-4" style="display: none;">
+                        <form @submit.prevent="if(query.trim()) { window.location.href = '{% url 'main:search' %}?q=' + encodeURIComponent(query.trim()) }">
+                            <div class="flex space-x-2 mb-4">
+                                <input type="text"
+                                       x-model="query"
+                                       @input.debounce.300ms="
+                                           if(query.trim()) {
+                                               loading = true;
+                                               error = null;
+                                               $nextTick(() => {
+                                                   fetch('{% url 'main:search_suggestions' %}?q=' + encodeURIComponent(query.trim()))
+                                                       .then(response => {
+                                                           if (!response.ok) throw new Error('Server error');
+                                                           return response.json();
+                                                       })
+                                                       .then(data => {
+                                                           results = data.results || [];
+                                                           loading = false;
+                                                       })
+                                                       .catch(error => {
+                                                           console.error('Search error:', error);
+                                                           loading = false;
+                                                           results = [];
+                                                           error = 'Ошибка поиска';
+                                                       });
+                                               });
+                                           } else {
+                                               results = [];
+                                               loading = false;
+                                               error = null;
+                                           }
+                                       "
+                                       placeholder="Поиск товаров..."
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm search-input focus:outline-none focus:ring-1 focus:ring-black">
+                                <button type="submit" class="px-4 py-2 bg-black text-white text-sm rounded-md search-button">
+                                    Найти
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Сообщение об ошибке -->
+                        <div x-show="error" x-text="error" class="text-red-500 text-sm py-2"></div>
+
+                        <div x-show="loading" class="text-center py-4">
+                            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-black"></div>
+                        </div>
+
+                        <div x-show="!loading && results.length > 0">
+                            <div class="max-h-60 overflow-y-auto">
+                                <template x-for="product in results.slice(0, 5)" :key="product.id">
+                                    <!-- Проверяем, что продукт имеет slug -->
+                                    <template x-if="product && product.slug">
+                                        <a :href="product.slug ? '/product/' + product.slug + '/' : 'javascript:void(0)'"
+                                           :hx-get="product.slug ? '/product/' + product.slug + '/' : false"
+                                           hx-target="#product-detail-container"
+                                           hx-push-url="true"
+                                           :hx-disabled="!product.slug"
+                                           class="search-result-item block py-2 px-3 hover:bg-gray-100 rounded-md transition-colors">
+                                            <div class="flex items-center space-x-3">
+                                                <img :src="product.image || '/static/images/default-product.jpg'"
+                                                     :alt="product.name"
+                                                     class="w-10 h-10 object-cover rounded"
+                                                     onerror="this.src='/static/images/default-product.jpg'">
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="search-result-name text-sm font-medium text-gray-900 truncate"
+                                                         x-text="product.name"></div>
+                                                    <div class="search-result-price text-sm text-gray-500"
+                                                         x-text="(product.price || '0') + '₽'"></div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </template>
+                                </template>
+                            </div>
+                            <a :href="'{% url 'main:search' %}?q=' + encodeURIComponent(query.trim())"
+                               class="view-all-results block text-center py-2 text-sm text-blue-600 hover:text-blue-800">
+                                Все результаты поиска →
+                            </a>
+                        </div>
+
+                        <div x-show="!loading && !error && query.trim() && results.length === 0" class="no-results text-center py-4 text-gray-500">
+                            Ничего не найдено
+                        </div>
+
+                        <div x-show="!loading && !error && !query.trim()" class="no-results text-center py-4 text-gray-500">
+                            Введите поисковый запрос
+                        </div>
                     </div>
+                </div>
+
                     <a class="text-xs xs:text-sm lg:text-base font-medium text-gray-900 uppercase hover:text-gray-600 adaptive-text">
                         АККАУНТ
                     </a>
@@ -370,6 +579,7 @@
                         {% for category in categories %}
                         <li><a href="{% url 'main:catalog' category.slug %}" class="footer-link text-gray-400 text-xs sm:text-sm hover:text-white">{{ category.name }}</a></li>
                         {% endfor %}
+                        <li><a href="{% url 'main:search' %}" class="footer-link text-gray-400 text-xs sm:text-sm hover:text-white">Поиск</a></li>
                     </ul>
                 </div>
 
@@ -425,7 +635,7 @@
                 </div>
             </div>
 
-            <!-- Bottom section Не забыть добавить ссылку на пользовательское соглашение-->
+            <!-- Bottom section -->
             <div class="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 flex flex-col md:flex-row justify-between items-center">
                 <p class="text-gray-400 text-xs sm:text-sm mb-3 md:mb-0 text-center md:text-left">© 2023 ENFANTS RICHES DÉPRIMÉS. Все права защищены.</p>
                 <div class="flex space-x-4 sm:space-x-6">
@@ -437,79 +647,119 @@
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Mobile menu functionality
-            const menuToggle = document.getElementById('menuToggle');
-            const closeMenu = document.getElementById('closeMenu');
+        (function() {
+    // Переменные для хранения состояния
+    let menuInitialized = false;
+
+    function initMobileMenu() {
+        if (menuInitialized) return;
+
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+
+        if (!menuToggle || !mobileMenu) return;
+
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            overlay.classList.add('active');
+            menuToggle.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Удаляем старые обработчики перед добавлением новых
+        menuToggle.removeEventListener('click', openMobileMenu);
+        closeMenu.removeEventListener('click', closeMobileMenu);
+        overlay.removeEventListener('click', closeMobileMenu);
+
+        menuToggle.addEventListener('click', openMobileMenu);
+        closeMenu.addEventListener('click', closeMobileMenu);
+        overlay.addEventListener('click', closeMobileMenu);
+
+        menuInitialized = true;
+    }
+
+    function updateActiveNavLinks() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    // Инициализация при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        initMobileMenu();
+        updateActiveNavLinks();
+    });
+
+    // Обработка HTMX событий
+    document.addEventListener('htmx:afterSettle', function() {
+        initMobileMenu();
+        updateActiveNavLinks();
+    });
+
+    document.addEventListener('htmx:afterRequest', function() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+        const menuToggle = document.getElementById('menuToggle');
+
+        if (mobileMenu && mobileMenu.classList.contains('open')) {
+            mobileMenu.classList.remove('open');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+
+    // Close mobile menu on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
             const mobileMenu = document.getElementById('mobileMenu');
             const overlay = document.getElementById('overlay');
+            const menuToggle = document.getElementById('menuToggle');
 
-            function openMobileMenu() {
-                mobileMenu.classList.add('open');
-                overlay.classList.add('active');
-                menuToggle.classList.add('active');
-                document.body.style.overflow = 'hidden';
-            }
-
-            function closeMobileMenu() {
+            if (mobileMenu && mobileMenu.classList.contains('open')) {
                 mobileMenu.classList.remove('open');
                 overlay.classList.remove('active');
                 menuToggle.classList.remove('active');
                 document.body.style.overflow = '';
             }
+        }
+    });
 
-            menuToggle.addEventListener('click', openMobileMenu);
-            closeMenu.addEventListener('click', closeMobileMenu);
-            overlay.addEventListener('click', closeMobileMenu);
+    // Listen for cart updates
+    document.addEventListener('cartUpdated', function(e) {
+        if (e.detail && e.detail.total_items !== undefined) {
+            updateHeaderCartCount(e.detail.total_items);
+        }
+    });
 
-            // Close mobile menu after navigation
-            document.addEventListener('htmx:afterRequest', function() {
-                closeMobileMenu();
-            });
+})();
 
-            // Close mobile menu on window resize
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768) {
-                    closeMobileMenu();
-                }
-            });
+// Global function to update cart count (оставляем вне IIFE)
+window.updateHeaderCartCount = function(count) {
+    const desktopCart = document.getElementById('desktopCart');
+    const mobileCart = document.getElementById('mobileCart');
+    const mobileCartHeader = document.getElementById('mobileCartHeader');
+    const cartText = `CART (${count})`;
 
-            // Update active navigation links after HTMX requests
-            document.addEventListener('htmx:afterSettle', function() {
-                updateActiveNavLinks();
-            });
-
-            function updateActiveNavLinks() {
-                const currentPath = window.location.pathname;
-                const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
-
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === currentPath) {
-                        link.classList.add('active');
-                    }
-                });
-            }
-
-            // Listen for cart updates
-            document.addEventListener('cartUpdated', function(e) {
-                if (e.detail && e.detail.total_items !== undefined) {
-                    updateHeaderCartCount(e.detail.total_items);
-                }
-            });
-        });
-
-        // Global function to update cart count
-        window.updateHeaderCartCount = function(count) {
-            const desktopCart = document.getElementById('desktopCart');
-            const mobileCart = document.getElementById('mobileCart');
-            const mobileCartHeader = document.getElementById('mobileCartHeader');
-            const cartText = `CART (${count})`;
-
-            if (desktopCart) desktopCart.textContent = cartText;
-            if (mobileCart) mobileCart.textContent = cartText;
-            if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-        };
+    if (desktopCart) desktopCart.textContent = cartText;
+    if (mobileCart) mobileCart.textContent = cartText;
+    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+};
     </script>
 </body>
 </html>

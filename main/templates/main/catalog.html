@@ -1,3 +1,12 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+
+{% block title %}
+    {% if current_category %}{{ current_category|upper }}{% else %}Все товары{% endif %} - ENFANTS RICHES DÉPRIMÉS
+{% endblock %}
+
+
 {% block content %}
 <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb and Filters -->
@@ -27,10 +36,8 @@
     {% if products %}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
         {% for product in products %}
-        <div class="product-card group cursor-pointer"
-             hx-get="{% url 'main:product_detail' product.slug %}"
-             hx-target="#main-content"
-             hx-push-url="true">
+        <!-- УБРАТЬ HTMX АТРИБУТЫ И ОБЕРНУТЬ В ССЫЛКУ -->
+        <a href="{% url 'main:product_detail' product.slug %}" class="product-card group cursor-pointer block">
             <div class="aspect-square overflow-hidden bg-gray-100 mb-4 relative">
                 <!-- Контейнер для изображений -->
                 <div class="image-container w-full h-full relative">
@@ -71,7 +78,7 @@
                 <p class="text-sm text-gray-600 mb-1 uppercase">{{ product.color }}</p>
                 <p class="text-sm font-medium">₽{{ product.price }}</p>
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
     {% else %}
@@ -85,9 +92,6 @@
             {% endif %}
         </p>
         <a href="{% url 'main:index' %}"
-           hx-get="{% url 'main:index' %}"
-           hx-target="#main-content"
-           hx-push-url="true"
            class="bg-black text-white px-6 py-3 text-sm font-medium uppercase hover:bg-gray-800 transition-colors">
             НАЗАД НА ГЛАВНУЮ
         </a>
@@ -113,6 +117,9 @@
 
     .product-card {
         transition: transform 0.3s ease;
+        text-decoration: none; /* Убираем подчеркивание у ссылки */
+        color: inherit; /* Наследуем цвет текста */
+        display: block; /* Делаем ссылку блочным элементом */
     }
 
     .product-card:hover {
@@ -275,14 +282,13 @@
                 activeImageIndex = 0;
             }
 
-            // Добавляем обработчик клика на всю карточку (для HTMX)
-            card.addEventListener('click', function(e) {
-                // Если клик был по точке, не переходим на страницу товара
-                if (e.target.closest('.image-dot')) {
+            // Предотвращаем переход по ссылке при клике на точки
+            const dots = card.querySelectorAll('.image-dot');
+            dots.forEach(dot => {
+                dot.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    return;
-                }
+                });
             });
         });
 

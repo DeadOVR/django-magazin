@@ -1,5 +1,7 @@
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.generic import TemplateView, DetailView
+from django.http import JsonResponse
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from .models import Category, Product, Size
@@ -23,7 +25,7 @@ class IndexView(TemplateView):
 
 
 class CatalogView(TemplateView):
-    template = 'main/base.html'
+    template_name = 'main/catalog.html'  # Измените template на template_name
 
     FILTER_MAPPING = {
         'color': lambda queryset, value: queryset.filter(color__iexact=value),
@@ -78,19 +80,23 @@ class CatalogView(TemplateView):
 
     def get(self, request, *args, **kwargs):
         context = self.get_context_data(**kwargs)
+
         if request.headers.get('HX-Request'):
+            # HTMX запросы - возвращаем частичные шаблоны
             if context.get('show_search'):
                 return TemplateResponse(request, 'main/search_input.html', context)
             elif context.get('reset_search'):
                 return TemplateResponse(request, 'main/search_button.html', {})
             template = 'main/filter_modal.html' if request.GET.get('show_filters') == 'true' else 'main/catalog.html'
             return TemplateResponse(request, template, context)
-        return TemplateResponse(request, self.template, context)
+        else:
+            # ОБЫЧНЫЕ запросы - возвращаем ПОЛНУЮ страницу каталога
+            return TemplateResponse(request, 'main/catalog.html', context)
 
 
 class ProductDetailView(DetailView):
     model = Product
-    template_name = 'main/base.html'
+    template_name = 'main/product_detail.html'  # Полный шаблон с base.html
     slug_field = 'slug'
     slug_url_kwarg = 'slug'
 
@@ -107,6 +113,73 @@ class ProductDetailView(DetailView):
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(**kwargs)
-        if request.headers.get('HX-Request'):
-            return TemplateResponse(request, 'main/product_detail.html', context)
+
+        # Всегда возвращаем полную страницу
         return TemplateResponse(request, self.template_name, context)
+
+
+def search(request):
+    query = request.GET.get('q', '').strip()
+
+    if query:
+        products = Product.objects.filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query) |
+            Q(category__name__icontains=query),
+            is_active=True  # Добавляем фильтр по активным товарам
+        ).select_related('category')
+
+        print(f"🔍 Search query: '{query}'")
+        print(f"📦 Found {products.count()} products")
+        for product in products:
+            print(f"   - {product.name} (active: {product.is_active})")
+    else:
+        products = Product.objects.filter(is_active=True)  # Только активные товары
+        print("ℹ️  No query, showing all active products")
+
+    context = {
+        'products': products,
+        'query': query,
+        'title': f'Результаты поиска: {query}' if query else 'Все товары'
+    }
+    return render(request, 'main/search_results.html', context)
+
+
+def search_suggestions(request):
+    try:
+        query = request.GET.get('q', '').strip()
+        print(f"🔍 Search suggestions query: '{query}'")
+
+        if not query:
+            return JsonResponse({'results': []})
+
+        # Ищем товары
+        products = Product.objects.filter(
+            Q(name__icontains=query) | Q(description__icontains=query),
+            is_active=True  # Добавляем фильтр по активным товарам
+        )[:5]
+
+        print(f"📦 Found {products.count()} products")
+
+        results = []
+        for product in products:
+            print(f"   - {product.name} (slug: {product.slug})")
+
+            # Используем main_image из модели Product
+            image_url = product.main_image.url if product.main_image else None
+
+            results.append({
+                'id': product.id,
+                'name': product.name,
+                'slug': product.slug,
+                'price': str(product.price),
+                'image': image_url  # Используем main_image
+            })
+
+        return JsonResponse({'results': results})
+
+    except Exception as e:
+        print(f"❌ Search error: {e}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'results': []}, status=500)

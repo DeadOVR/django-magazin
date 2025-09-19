@@ -1,17 +1,18 @@
+{% extends 'main/base.html' %}
+
+{% load static %}
+
+{% block title %}{{ product.name }} - ENFANTS RICHES DÉPRIMÉS{% endblock %}
+
+{% block content %}
 <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <div class="mb-8">
         <nav class="text-sm text-gray-600">
             <a href="{% url 'main:index' %}"
-               hx-get="{% url 'main:index' %}"
-               hx-target="#main-content"
-               hx-push-url="true"
                class="hover:text-gray-900">ГЛАВНАЯ</a>
             <span class="mx-2">/</span>
             <a href="{% url 'main:catalog' product.category.slug %}"
-               hx-get="{% url 'main:catalog' product.category.slug %}"
-               hx-target="#main-content"
-               hx-push-url="true"
                class="hover:text-gray-900">{{ product.category.name|upper }}</a>
             <span class="mx-2">/</span>
             <span class="text-gray-900">{{ product.name|upper }}</span>
@@ -152,11 +153,7 @@
         <h2 class="text-xl font-bold tracking-tight text-gray-900 mb-8">ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for related_product in related_products %}
-            <div class="product-card group cursor-pointer relative overflow-hidden"
-                 hx-get="{% url 'main:product_detail' related_product.slug %}"
-                 hx-target="#main-content"
-                 hx-push-url="true"
-                 onclick="smoothScrollToTop(this)">
+            <a href="{% url 'main:product_detail' related_product.slug %}" class="product-card group cursor-pointer relative overflow-hidden block">
                 <div class="aspect-square overflow-hidden bg-gray-100 mb-4">
                     {% if related_product.main_image %}
                         <img src="{{ related_product.main_image.url }}"
@@ -176,7 +173,7 @@
 
                 <!-- Overlay effect -->
                 <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-            </div>
+            </a>
             {% endfor %}
         </div>
     </div>
@@ -350,16 +347,27 @@
     </style>
 
     <script>
-    // Функция для плавного скролла к верху страницы
-    function smoothScrollToTop(element) {
-        // Предотвращаем немедленный переход, даем время для анимации
-        setTimeout(() => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }, 300); // Задержка для визуального эффекта нажатия
+     // Функция для плавного скролла к верху страницы
+    function smoothScrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     }
+
+    // УБРАТЬ вызов smoothScrollToTop из карточек товаров
+    // Инициализация карточек товаров
+    document.querySelectorAll('.product-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+            this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+            this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+            this.style.boxShadow = 'none';
+        });
+    });
 
     // Глобальные переменные для галереи
     let currentImageIndex = 0;
@@ -738,3 +746,4 @@
     setTimeout(initializeProductPage, 1000);
     </script>
 </main>
+{% endblock %}
