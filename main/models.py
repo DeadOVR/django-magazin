@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.text import slugify
+from django.urls import reverse
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -38,6 +39,7 @@ class ProductSize(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True, verbose_name='Активный товар')
     slug = models.CharField(max_length=100, unique=True)
     category = models.ForeignKey(Category, on_delete=models.CASCADE,
                                  related_name='products')
@@ -52,6 +54,9 @@ class Product(models.Model):
         if not self.slug:
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse('main:product_detail', kwargs={'slug': self.slug})
 
 
     def __str__(self):
