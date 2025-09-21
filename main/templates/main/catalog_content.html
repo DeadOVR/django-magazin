@@ -11,10 +11,10 @@
             {% endif %}
         </h2>
         <button class="bg-black text-white px-4 py-2 text-sm font-medium uppercase hover:bg-gray-800 transition-colors w-full sm:w-auto"
-                hx-get="{% if current_category %}{% url 'main:catalog' current_category %}{% else %}{% url 'main:catalog_all' %}{% endif %}?show_filters=true"
-                hx-target="#filter-modal-content"
-                hx-swap="innerHTML"
-                hx-on::after-request="document.getElementById('filter-modal').classList.remove('hidden')">
+            hx-get="{% if current_category %}{% url 'main:catalog' current_category %}{% else %}{% url 'main:catalog_all' %}{% endif %}?show_filters=true"
+            hx-target="#filter-modal > div"
+            hx-swap="innerHTML"
+            hx-on::after-request="document.getElementById('filter-modal').classList.remove('hidden')">
             ФИЛЬТРЫ
         </button>
     </div>
