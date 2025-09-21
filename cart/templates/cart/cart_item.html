@@ -16,8 +16,8 @@
         <!-- Product Info -->
         <div class="text-center">
             <h3 class="font-bold text-sm">{{ item.product.name|upper }}</h3>
-            <p class="text-xs">ЦВЕТ {{ item.product.color|upper }}</p>
-            <p class="text-xs">РАЗМЕР {{ item.product_size.size.name }}</p>
+            <p class="text-xs">ЦВЕТ: {{ item.product.color|upper }}</p>
+            <p class="text-xs">РАЗМЕР: {{ item.product_size.size.name }}</p>
             <p class="font-bold mt-1">₽{{ item.product.price }}</p>
 
             <!-- Quantity Controls -->
@@ -52,7 +52,6 @@
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-target="#cart-modal"
                     hx-swap="outerHTML"
-                    hx-confirm="Remove this item from cart?"
                     hx-trigger="click"
                     hx-on::after-request="console.log('Remove Item {{ item.id }} Request Completed');">
                 Удалить

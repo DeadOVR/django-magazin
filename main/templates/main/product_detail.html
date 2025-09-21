@@ -348,402 +348,454 @@
 
     <script>
      // Функция для плавного скролла к верху страницы
-    function smoothScrollToTop() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    }
+function smoothScrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
 
-    // УБРАТЬ вызов smoothScrollToTop из карточек товаров
-    // Инициализация карточек товаров
-    document.querySelectorAll('.product-card').forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-8px) scale(1.02)';
-            this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
-            this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-        });
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0) scale(1)';
-            this.style.boxShadow = 'none';
-        });
+// УБРАТЬ вызов smoothScrollToTop из карточек товаров
+// Инициализация карточек товаров
+document.querySelectorAll('.product-card').forEach(card => {
+    card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-8px) scale(1.02)';
+        this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+        this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+    });
+    card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0) scale(1)';
+        this.style.boxShadow = 'none';
+    });
+});
+
+// Глобальные переменные для галереи
+let currentImageIndex = 0;
+let totalImages = {{ product.images.all|length|default:0 }};
+let isOverlayOpen = false;
+let isImageZoomed = false;
+
+// Image Gallery Functions
+function showImage(index) {
+    const images = document.querySelectorAll('.detail-main-image');
+    const thumbnails = document.querySelectorAll('.thumbnail');
+
+    if (images.length === 0) return;
+
+    // Hide all images
+    images.forEach(img => {
+        img.style.opacity = '0';
     });
 
-    // Глобальные переменные для галереи
-    let currentImageIndex = 0;
-    let totalImages = {{ product.images.all|length|default:0 }};
-    let isOverlayOpen = false;
-    let isImageZoomed = false;
+    // Show selected image
+    images[index].style.opacity = '1';
+    currentImageIndex = index;
 
-    // Image Gallery Functions
-    function showImage(index) {
-        const images = document.querySelectorAll('.detail-main-image');
-        const thumbnails = document.querySelectorAll('.thumbnail');
-
-        if (images.length === 0) return;
-
-        // Hide all images
-        images.forEach(img => {
-            img.style.opacity = '0';
+    // Update active thumbnail
+    if (thumbnails.length > 0) {
+        thumbnails.forEach(thumb => {
+            thumb.classList.remove('active');
+            if (parseInt(thumb.dataset.index) === index) {
+                thumb.classList.add('active');
+            }
         });
-
-        // Show selected image
-        images[index].style.opacity = '1';
-        currentImageIndex = index;
-
-        // Update active thumbnail
-        if (thumbnails.length > 0) {
-            thumbnails.forEach(thumb => {
-                thumb.classList.remove('active');
-                if (parseInt(thumb.dataset.index) === index) {
-                    thumb.classList.add('active');
-                }
-            });
-        }
-
-        // Обновляем изображение в оверлее, если он открыт
-        if (isOverlayOpen) {
-            updateOverlayImage();
-        }
     }
 
-    function nextImage() {
-        if (totalImages <= 1) return;
-        currentImageIndex = (currentImageIndex + 1) % totalImages;
-        showImage(currentImageIndex);
-        updateOverlayCounter();
+    // Обновляем изображение в оверлее, если он открыт
+    if (isOverlayOpen) {
+        updateOverlayImage();
     }
+}
 
-    function prevImage() {
-        if (totalImages <= 1) return;
-        currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
-        showImage(currentImageIndex);
-        updateOverlayCounter();
+function nextImage() {
+    if (totalImages <= 1) return;
+    currentImageIndex = (currentImageIndex + 1) % totalImages;
+    showImage(currentImageIndex);
+    updateOverlayCounter();
+}
+
+function prevImage() {
+    if (totalImages <= 1) return;
+    currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
+    showImage(currentImageIndex);
+    updateOverlayCounter();
+}
+
+// Функции для полноэкранного просмотра
+function openImageOverlay() {
+    if (totalImages === 0) return;
+
+    const overlay = document.getElementById('image-overlay');
+    const overlayImage = document.getElementById('overlay-image');
+    const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]') ||
+                        document.querySelector('.detail-main-image');
+
+    if (!currentImage) return;
+
+    // Устанавливаем исходное изображение
+    overlayImage.src = currentImage.src;
+    overlayImage.alt = currentImage.alt;
+
+    // Показываем оверлей
+    overlay.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    isOverlayOpen = true;
+
+    // Обновляем счетчик
+    updateOverlayCounter();
+
+    // Сбрасываем зум
+    isImageZoomed = false;
+    overlayImage.classList.remove('zoomed');
+}
+
+function closeImageOverlay() {
+    const overlay = document.getElementById('image-overlay');
+    overlay.classList.add('hidden');
+    document.body.style.overflow = '';
+    isOverlayOpen = false;
+}
+
+function updateOverlayCounter() {
+    if (totalImages <= 1) return;
+
+    const counter = document.getElementById('image-counter');
+    if (counter) {
+        counter.textContent = `${currentImageIndex + 1} / ${totalImages}`;
     }
+}
 
-    // Функции для полноэкранного просмотра
-    function openImageOverlay() {
-        if (totalImages === 0) return;
+function updateOverlayImage() {
+    const overlayImage = document.getElementById('overlay-image');
+    const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]');
 
-        const overlay = document.getElementById('image-overlay');
-        const overlayImage = document.getElementById('overlay-image');
-        const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]') ||
-                            document.querySelector('.detail-main-image');
-
-        if (!currentImage) return;
-
-        // Устанавливаем исходное изображение
+    if (currentImage && overlayImage) {
         overlayImage.src = currentImage.src;
-        overlayImage.alt = currentImage.alt;
-
-        // Показываем оверлей
-        overlay.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        isOverlayOpen = true;
-
-        // Обновляем счетчик
         updateOverlayCounter();
-
-        // Сбрасываем зум
-        isImageZoomed = false;
-        overlayImage.classList.remove('zoomed');
     }
+}
 
-    function closeImageOverlay() {
-        const overlay = document.getElementById('image-overlay');
-        overlay.classList.add('hidden');
-        document.body.style.overflow = '';
-        isOverlayOpen = false;
-    }
+function toggleZoom() {
+    const overlayImage = document.getElementById('overlay-image');
+    if (!overlayImage) return;
 
-    function updateOverlayCounter() {
-        if (totalImages <= 1) return;
+    isImageZoomed = !isImageZoomed;
+    overlayImage.classList.toggle('zoomed', isImageZoomed);
+}
 
-        const counter = document.getElementById('image-counter');
-        if (counter) {
-            counter.textContent = `${currentImageIndex + 1} / ${totalImages}`;
-        }
-    }
+// Initialize image gallery
+function initializeImageGallery() {
+    const images = document.querySelectorAll('.detail-main-image');
+    totalImages = images.length;
 
-    function updateOverlayImage() {
-        const overlayImage = document.getElementById('overlay-image');
-        const currentImage = document.querySelector('.detail-main-image[style*="opacity: 1"]');
+    if (totalImages > 1) {
+        // Add click events to navigation buttons
+        const nextBtn = document.querySelector('.next-btn');
+        const prevBtn = document.querySelector('.prev-btn');
 
-        if (currentImage && overlayImage) {
-            overlayImage.src = currentImage.src;
-            updateOverlayCounter();
-        }
-    }
+        if (nextBtn) nextBtn.onclick = nextImage;
+        if (prevBtn) prevBtn.onclick = prevImage;
 
-    function toggleZoom() {
-        const overlayImage = document.getElementById('overlay-image');
-        if (!overlayImage) return;
-
-        isImageZoomed = !isImageZoomed;
-        overlayImage.classList.toggle('zoomed', isImageZoomed);
-    }
-
-    // Initialize image gallery
-    function initializeImageGallery() {
-        const images = document.querySelectorAll('.detail-main-image');
-        totalImages = images.length;
-
-        if (totalImages > 1) {
-            // Add click events to navigation buttons
-            const nextBtn = document.querySelector('.next-btn');
-            const prevBtn = document.querySelector('.prev-btn');
-
-            if (nextBtn) nextBtn.onclick = nextImage;
-            if (prevBtn) prevBtn.onclick = prevImage;
-
-            // Add click events to thumbnails
-            const thumbnails = document.querySelectorAll('.thumbnail');
-            thumbnails.forEach(thumb => {
-                thumb.onclick = function() {
-                    const index = parseInt(this.dataset.index);
-                    showImage(index);
-                };
-            });
-
-            // Set first thumbnail as active
-            if (thumbnails.length > 0) {
-                showImage(0);
-            }
-        } else if (totalImages === 1) {
-            showImage(0);
-        }
-
-        // Добавляем обработчик клика для открытия изображения
-        const gallery = document.getElementById('image-gallery');
-        if (gallery) {
-            gallery.addEventListener('click', function(e) {
-                if (!e.target.classList.contains('prev-btn') &&
-                    !e.target.classList.contains('next-btn') &&
-                    !e.target.closest('.image-nav')) {
-                    openImageOverlay();
-                }
-            });
-        }
-
-        // Также добавляем обработчик напрямую к изображениям
-        const mainImages = document.querySelectorAll('.detail-main-image');
-        mainImages.forEach(img => {
-            img.addEventListener('click', openImageOverlay);
-        });
-
-        // Инициализация обработчиков оверлея
-        const closeOverlay = document.getElementById('close-overlay');
-        const prevOverlay = document.getElementById('prev-overlay');
-        const nextOverlay = document.getElementById('next-overlay');
-        const overlayImage = document.getElementById('overlay-image');
-
-        if (closeOverlay) {
-            closeOverlay.addEventListener('click', closeImageOverlay);
-        }
-
-        if (prevOverlay) {
-            prevOverlay.addEventListener('click', function(e) {
-                e.stopPropagation();
-                prevImage();
-            });
-        }
-
-        if (nextOverlay) {
-            nextOverlay.addEventListener('click', function(e) {
-                e.stopPropagation();
-                nextImage();
-            });
-        }
-
-        if (overlayImage) {
-            overlayImage.addEventListener('click', function(e) {
-                e.stopPropagation();
-                toggleZoom();
-            });
-        }
-
-        // Закрытие оверлея по клику на фон
-        const overlay = document.getElementById('image-overlay');
-        if (overlay) {
-            overlay.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeImageOverlay();
-                }
-            });
-        }
-
-        // Обработка клавиш
-        document.addEventListener('keydown', function(e) {
-            if (!isOverlayOpen) return;
-
-            switch(e.key) {
-                case 'Escape':
-                    closeImageOverlay();
-                    break;
-                case 'ArrowLeft':
-                    if (totalImages > 1) prevImage();
-                    break;
-                case 'ArrowRight':
-                    if (totalImages > 1) nextImage();
-                    break;
-                case ' ':
-                    e.preventDefault();
-                    toggleZoom();
-                    break;
-            }
-        });
-    }
-
-    // Size Selection Functions
-    let selectedSize = null;
-    let selectedSizeId = null;
-
-    function updateSelectedSize() {
-        const sizeRadios = document.querySelectorAll('.size-radio');
-        const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked && !radio.disabled);
-        if (checkedRadio) {
-            selectedSize = checkedRadio.dataset.size;
-            selectedSizeId = checkedRadio.value;
-        } else {
-            selectedSize = null;
-            selectedSizeId = null;
-        }
-    }
-
-    function initializeSizeRadios() {
-        const sizeRadios = document.querySelectorAll('.size-radio');
-        const addToCartBtn = document.getElementById('add-to-cart-btn');
-
-        if (sizeRadios.length === 0) {
-            if (addToCartBtn) addToCartBtn.disabled = true;
-            return;
-        }
-
-        const availableRadios = Array.from(sizeRadios).filter(radio => !radio.disabled);
-        if (availableRadios.length === 0) {
-            if (addToCartBtn) addToCartBtn.disabled = true;
-            return;
-        }
-
-        const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked);
-        if (!checkedRadio || checkedRadio.disabled) {
-            availableRadios[0].checked = true;
-        }
-
-        updateSelectedSize();
-
-        sizeRadios.forEach(radio => {
-            radio.onchange = function() {
-                if (!this.disabled) updateSelectedSize();
+        // Add click events to thumbnails
+        const thumbnails = document.querySelectorAll('.thumbnail');
+        thumbnails.forEach(thumb => {
+            thumb.onclick = function() {
+                const index = parseInt(this.dataset.index);
+                showImage(index);
             };
         });
+
+        // Set first thumbnail as active
+        if (thumbnails.length > 0) {
+            showImage(0);
+        }
+    } else if (totalImages === 1) {
+        showImage(0);
     }
 
-    // Add to Cart Function
-    function addToCart() {
-        if (!selectedSizeId) {
-            showNotification('Пожалуйста, выберите размер');
-            return;
-        }
-
-        const csrftoken = getCookie('csrftoken');
-
-        fetch('/cart/add/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                product_size_id: selectedSizeId,
-                quantity: 1
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Товар добавлен в корзину');
-            } else {
-                showNotification('Ошибка: ' + (data.message || 'Не удалось добавить товар'));
+    // Добавляем обработчик клика для открытия изображения
+    const gallery = document.getElementById('image-gallery');
+    if (gallery) {
+        gallery.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('prev-btn') &&
+                !e.target.classList.contains('next-btn') &&
+                !e.target.closest('.image-nav')) {
+                openImageOverlay();
             }
-        })
-        .catch(error => {
-            showNotification('Ошибка при добавлении в корзину');
         });
     }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
+    // Также добавляем обработчик напрямую к изображениям
+    const mainImages = document.querySelectorAll('.detail-main-image');
+    mainImages.forEach(img => {
+        img.addEventListener('click', openImageOverlay);
+    });
+
+    // Инициализация обработчиков оверлея
+    const closeOverlay = document.getElementById('close-overlay');
+    const prevOverlay = document.getElementById('prev-overlay');
+    const nextOverlay = document.getElementById('next-overlay');
+    const overlayImage = document.getElementById('overlay-image');
+
+    if (closeOverlay) {
+        closeOverlay.addEventListener('click', closeImageOverlay);
+    }
+
+    if (prevOverlay) {
+        prevOverlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            prevImage();
+        });
+    }
+
+    if (nextOverlay) {
+        nextOverlay.addEventListener('click', function(e) {
+            e.stopPropagation();
+            nextImage();
+        });
+    }
+
+    if (overlayImage) {
+        overlayImage.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleZoom();
+        });
+    }
+
+    // Закрытие оверлея по клику на фон
+    const overlay = document.getElementById('image-overlay');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeImageOverlay();
             }
-        }
-        return cookieValue;
+        });
     }
 
-    function showNotification(message) {
-        const notification = document.createElement('div');
-        notification.className = 'fixed top-20 right-4 bg-black text-white px-6 py-3 rounded shadow-lg z-50 transform translate-x-full transition-transform duration-300';
-        notification.textContent = message;
-        document.body.appendChild(notification);
+    // Обработка клавиш
+    document.addEventListener('keydown', function(e) {
+        if (!isOverlayOpen) return;
 
-        setTimeout(() => {
-            notification.style.transform = 'translateX(0)';
-        }, 10);
-
-        setTimeout(() => {
-            notification.style.transform = 'translateX(100%)';
-            setTimeout(() => {
-                notification.remove();
-            }, 300);
-        }, 3000);
-    }
-
-    // Основная функция инициализации
-    function initializeProductPage() {
-        setTimeout(() => {
-            initializeImageGallery();
-            initializeSizeRadios();
-
-            // Product card hover effects
-            document.querySelectorAll('.product-card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-8px) scale(1.02)';
-                    this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
-                    this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-                });
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0) scale(1)';
-                    this.style.boxShadow = 'none';
-                });
-
-                // Анимация нажатия
-                card.addEventListener('mousedown', function() {
-                    this.style.transform = 'translateY(-4px) scale(0.98)';
-                });
-                card.addEventListener('mouseup', function() {
-                    this.style.transform = 'translateY(-8px) scale(1.02)';
-                });
-            });
-        }, 150);
-    }
-
-    // Инициализация
-    document.addEventListener('DOMContentLoaded', initializeProductPage);
-    document.addEventListener('htmx:afterSwap', function(event) {
-        if (event.detail.target.id === 'main-content') {
-            setTimeout(initializeProductPage, 200);
+        switch(e.key) {
+            case 'Escape':
+                closeImageOverlay();
+                break;
+            case 'ArrowLeft':
+                if (totalImages > 1) prevImage();
+                break;
+            case 'ArrowRight':
+                if (totalImages > 1) nextImage();
+                break;
+            case ' ':
+                e.preventDefault();
+                toggleZoom();
+                break;
         }
     });
-    window.addEventListener('load', initializeProductPage);
-    setTimeout(initializeProductPage, 1000);
+}
+
+// Size Selection Functions
+let selectedSize = null;
+let selectedSizeId = null;
+
+function updateSelectedSize() {
+    const sizeRadios = document.querySelectorAll('.size-radio');
+    const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked && !radio.disabled);
+    if (checkedRadio) {
+        selectedSize = checkedRadio.dataset.size;
+        selectedSizeId = checkedRadio.value;
+    } else {
+        selectedSize = null;
+        selectedSizeId = null;
+    }
+}
+
+function initializeSizeRadios() {
+    const sizeRadios = document.querySelectorAll('.size-radio');
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+
+    if (sizeRadios.length === 0) {
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+    }
+
+    const availableRadios = Array.from(sizeRadios).filter(radio => !radio.disabled);
+    if (availableRadios.length === 0) {
+        if (addToCartBtn) addToCartBtn.disabled = true;
+        return;
+    }
+
+    const checkedRadio = Array.from(sizeRadios).find(radio => radio.checked);
+    if (!checkedRadio || checkedRadio.disabled) {
+        availableRadios[0].checked = true;
+    }
+
+    updateSelectedSize();
+
+    sizeRadios.forEach(radio => {
+        radio.onchange = function() {
+            if (!this.disabled) updateSelectedSize();
+        };
+    });
+}
+
+// Cart functionality
+const desktopCart = document.getElementById('desktopCart');
+const mobileCart = document.getElementById('mobileCart');
+const mobileCartHeader = document.getElementById('mobileCartHeader');
+
+// Get initial cart count
+updateCartCount();
+
+function updateHeaderCartCount(count) {
+    const cartText = `КОРЗИНА (${count})`;
+    if (desktopCart) desktopCart.textContent = cartText;
+    if (mobileCart) mobileCart.textContent = cartText;
+    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+}
+
+function updateCartCount() {
+    fetch('{% url "cart:cart_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            updateHeaderCartCount(data.total_items);
+        });
+}
+
+function openCart() {
+    htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+        target: '#cart-container',
+        swap: 'innerHTML'
+    });
+}
+
+[desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
+    if (cartLink) {
+        cartLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCart();
+        });
+    }
+});
+
+// Add to Cart Function
+function addToCart() {
+    const productSlug = '{{ product.slug }}';
+    console.log('Product Slug:', productSlug);
+
+    // Update selected size before sending
+    updateSelectedSize();
+    console.log('Selected Size ID:', selectedSizeId);
+
+    if (!selectedSizeId) {
+        showNotification('Please select a size');
+        return;
+    }
+
+    let formData = new FormData();
+    formData.append('size_id', selectedSizeId);
+    formData.append('quantity', '1');
+    fetch(`{% url 'cart:add_to_cart' 'PLACEHOLDER' %}`.replace('PLACEHOLDER', productSlug), {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        console.log('Response Status:', response.status);
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response Data:', data);
+        if (data.error) {
+            showNotification(data.error);
+        } else {
+            updateHeaderCartCount(data.total_items);
+            showNotification(data.message);
+            htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                target: '#cart-container',
+                swap: 'innerHTML'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding to cart');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'fixed top-20 right-4 bg-black text-white px-6 py-3 rounded shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 10);
+
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
+
+// Основная функция инициализации
+function initializeProductPage() {
+    setTimeout(() => {
+        initializeImageGallery();
+        initializeSizeRadios();
+
+        // Product card hover effects
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+                this.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+                this.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            });
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+                this.style.boxShadow = 'none';
+            });
+
+            // Анимация нажатия
+            card.addEventListener('mousedown', function() {
+                this.style.transform = 'translateY(-4px) scale(0.98)';
+            });
+            card.addEventListener('mouseup', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+        });
+    }, 150);
+}
+
+// Инициализация
+document.addEventListener('DOMContentLoaded', initializeProductPage);
+document.addEventListener('htmx:afterSwap', function(event) {
+    if (event.detail.target.id === 'main-content') {
+        setTimeout(initializeProductPage, 200);
+    }
+});
+window.addEventListener('load', initializeProductPage);
+setTimeout(initializeProductPage, 1000);
     </script>
 </main>
 {% endblock %}

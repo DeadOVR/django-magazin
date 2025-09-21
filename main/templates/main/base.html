@@ -435,119 +435,183 @@
 
     <script>
         (function() {
-            let menuInitialized = false;
+    let menuInitialized = false;
+    let isCartOpen = false;
+    let desktopCart, mobileCart, mobileCartHeader;
 
-            function initMobileMenu() {
-                if (menuInitialized) return;
+    function initCart() {
+        // Cart functionality
+        desktopCart = document.getElementById('desktopCart');
+        mobileCart = document.getElementById('mobileCart');
+        mobileCartHeader = document.getElementById('mobileCartHeader');
 
-                const menuToggle = document.getElementById('menuToggle');
-                const closeMenu = document.getElementById('closeMenu');
-                const mobileMenu = document.getElementById('mobileMenu');
-                const overlay = document.getElementById('overlay');
+        console.log('Cart script loaded');
+        console.log('Elements found:', {
+            desktopCart: !!desktopCart,
+            mobileCart: !!mobileCart,
+            mobileCartHeader: !!mobileCartHeader
+        });
 
-                if (!menuToggle || !mobileMenu) return;
+        // Get initial cart count
+        updateCartCount();
 
-                function openMobileMenu() {
-                    mobileMenu.classList.add('open');
-                    overlay.classList.add('active');
-                    menuToggle.classList.add('active');
-                    document.body.style.overflow = 'hidden';
-                }
+        // Привязка обработчиков открытия корзины
+        [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
+            if (cartLink) {
+                cartLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Cart clicked, open:', isCartOpen);
 
-                function closeMobileMenu() {
-                    mobileMenu.classList.remove('open');
-                    overlay.classList.remove('active');
-                    menuToggle.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-
-                menuToggle.removeEventListener('click', openMobileMenu);
-                closeMenu.removeEventListener('click', closeMobileMenu);
-                overlay.removeEventListener('click', closeMobileMenu);
-
-                menuToggle.addEventListener('click', openMobileMenu);
-                closeMenu.addEventListener('click', closeMobileMenu);
-                overlay.addEventListener('click', closeMobileMenu);
-
-                menuInitialized = true;
-            }
-
-            function updateActiveNavLinks() {
-                const currentPath = window.location.pathname;
-                const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
-
-                navLinks.forEach(link => {
-                    link.classList.remove('active');
-                    if (link.getAttribute('href') === currentPath) {
-                        link.classList.add('active');
+                    if (isCartOpen) {
+                        closeCart();
+                    } else {
+                        openCart();
                     }
                 });
             }
+        });
+    }
 
-            document.addEventListener('DOMContentLoaded', function() {
-                initMobileMenu();
-                updateActiveNavLinks();
+    function updateHeaderCartCount(count) {
+        const cartText = `КОРЗИНА (${count})`;
+        if (desktopCart) desktopCart.textContent = cartText;
+        if (mobileCart) mobileCart.textContent = cartText;
+        if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+    }
+
+    function updateCartCount() {
+        fetch('{% url "cart:cart_count" %}')
+            .then(response => response.json())
+            .then(data => {
+                updateHeaderCartCount(data.total_items);
             });
+    }
 
-            document.addEventListener('htmx:afterSettle', function() {
-                initMobileMenu();
-                updateActiveNavLinks();
-            });
+    function openCart() {
+        if (isCartOpen) return;
+        console.log('Opening cart...');
 
-            document.addEventListener('htmx:afterRequest', function() {
-                const mobileMenu = document.getElementById('mobileMenu');
-                const overlay = document.getElementById('overlay');
-                const menuToggle = document.getElementById('menuToggle');
+        htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+            target: '#cart-container',
+            swap: 'innerHTML'
+        });
 
-                if (mobileMenu && mobileMenu.classList.contains('open')) {
-                    mobileMenu.classList.remove('open');
-                    overlay.classList.remove('active');
-                    menuToggle.classList.remove('active');
-                    document.body.style.overflow = '';
-                }
-            });
+        isCartOpen = true;
+        console.log('Opening cart, isCartOpen:', isCartOpen);
+    }
 
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 768) {
-                    const mobileMenu = document.getElementById('mobileMenu');
-                    const overlay = document.getElementById('overlay');
-                    const menuToggle = document.getElementById('menuToggle');
+    function closeCart() {
+        if (!isCartOpen) return;
+        console.log('Closing cart...');
 
-                    if (mobileMenu && mobileMenu.classList.contains('open')) {
-                        mobileMenu.classList.remove('open');
-                        overlay.classList.remove('active');
-                        menuToggle.classList.remove('active');
-                        document.body.style.overflow = '';
-                    }
-                }
-            });
+        // Ваша логика закрытия корзины
+        isCartOpen = false;
+        console.log('Closing cart, isCartOpen:', isCartOpen);
+    }
 
-            document.addEventListener('cartUpdated', function(e) {
-                if (e.detail && e.detail.total_items !== undefined) {
-                    updateHeaderCartCount(e.detail.total_items);
-                }
-            });
+    function initMobileMenu() {
+        if (menuInitialized) return;
 
-        })();
+        const menuToggle = document.getElementById('menuToggle');
+        const closeMenu = document.getElementById('closeMenu');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
 
-        window.updateHeaderCartCount = function(count) {
-            const desktopCart = document.getElementById('desktopCart');
-            const mobileCart = document.getElementById('mobileCart');
-            const mobileCartHeader = document.getElementById('mobileCartHeader');
-            const cartText = `CART (${count})`;
+        if (!menuToggle || !mobileMenu) return;
 
-            if (desktopCart) desktopCart.textContent = cartText;
-            if (mobileCart) mobileCart.textContent = cartText;
-            if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-        };
+        function openMobileMenu() {
+            mobileMenu.classList.add('open');
+            overlay.classList.add('active');
+            menuToggle.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
 
-        window.getDropdownClass = function() {
-            const width = window.innerWidth;
-            if (width < 768) return 'mobile';
-            if (width < 1024) return 'tablet';
-            if (width < 1280) return 'desktop';
-            return 'large';
-        };
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('open');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        menuToggle.removeEventListener('click', openMobileMenu);
+        closeMenu.removeEventListener('click', closeMobileMenu);
+        overlay.removeEventListener('click', closeMobileMenu);
+
+        menuToggle.addEventListener('click', openMobileMenu);
+        closeMenu.addEventListener('click', closeMobileMenu);
+        overlay.addEventListener('click', closeMobileMenu);
+
+        menuInitialized = true;
+    }
+
+    function updateActiveNavLinks() {
+        const currentPath = window.location.pathname;
+        const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+
+        navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('active');
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initMobileMenu();
+        updateActiveNavLinks();
+        initCart(); // Инициализация корзины
+    });
+
+    document.addEventListener('htmx:afterSettle', function() {
+        initMobileMenu();
+        updateActiveNavLinks();
+        initCart(); // Переинициализация после htmx-запросов
+    });
+
+    document.addEventListener('htmx:afterRequest', function() {
+        const mobileMenu = document.getElementById('mobileMenu');
+        const overlay = document.getElementById('overlay');
+        const menuToggle = document.getElementById('menuToggle');
+
+        if (mobileMenu && mobileMenu.classList.contains('open')) {
+            mobileMenu.classList.remove('open');
+            overlay.classList.remove('active');
+            menuToggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
+            const mobileMenu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('overlay');
+            const menuToggle = document.getElementById('menuToggle');
+
+            if (mobileMenu && mobileMenu.classList.contains('open')) {
+                mobileMenu.classList.remove('open');
+                overlay.classList.remove('active');
+                menuToggle.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        }
+    });
+
+    document.addEventListener('cartUpdated', function(e) {
+        if (e.detail && e.detail.total_items !== undefined) {
+            updateHeaderCartCount(e.detail.total_items);
+        }
+    });
+
+    window.getDropdownClass = function() {
+        const width = window.innerWidth;
+        if (width < 768) return 'mobile';
+        if (width < 1024) return 'tablet';
+        if (width < 1280) return 'desktop';
+        return 'large';
+    };
+
+})();
     </script>
 
     {% block extra_js %}{% endblock %}
