@@ -5,6 +5,9 @@
 {% block title %}{{ product.name }} - ENFANTS RICHES DÉPRIMÉS{% endblock %}
 
 {% block content %}
+
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+
 <main class="mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Breadcrumb -->
     <div class="mb-8">
@@ -117,6 +120,7 @@
                 <button id="add-to-cart-btn"
                         class="w-full bg-black text-white py-3 px-6 text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onclick="addToCart()"
+                        data-add-url="{% url 'cart:add_to_cart' product.slug %}"
                         {% if not product.product_sizes.all or not product.product_sizes.all.0.stock > 0 %}disabled{% endif %}>
                     ДОБАВИТЬ В КОРЗИНУ
                 </button>
@@ -347,7 +351,7 @@
     </style>
 
     <script>
-     // Функция для плавного скролла к верху страницы
+// Функция для плавного скролла к верху страницы
 function smoothScrollToTop() {
     window.scrollTo({
         top: 0,
@@ -419,6 +423,16 @@ function prevImage() {
     currentImageIndex = (currentImageIndex - 1 + totalImages) % totalImages;
     showImage(currentImageIndex);
     updateOverlayCounter();
+}
+
+// Функции для сохранения счетчика корзины между вкладками
+function loadCartCountFromStorage() {
+    const savedCount = localStorage.getItem('cartCount');
+    if (savedCount !== null) {
+        updateHeaderCartCount(parseInt(savedCount));
+        return parseInt(savedCount);
+    }
+    return 0;
 }
 
 // Функции для полноэкранного просмотра
@@ -644,23 +658,68 @@ const desktopCart = document.getElementById('desktopCart');
 const mobileCart = document.getElementById('mobileCart');
 const mobileCartHeader = document.getElementById('mobileCartHeader');
 
-// Get initial cart count
-updateCartCount();
+// Загружаем счетчик из localStorage при инициализации
+loadCartCountFromStorage();
 
 function updateHeaderCartCount(count) {
     const cartText = `КОРЗИНА (${count})`;
-    if (desktopCart) desktopCart.textContent = cartText;
-    if (mobileCart) mobileCart.textContent = cartText;
-    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+
+    // Сохраняем в localStorage
+    localStorage.setItem('cartCount', count);
+
+    // Обновляем все элементы корзины
+    const cartElements = [
+        document.getElementById('desktopCart'),
+        document.getElementById('mobileCart'),
+        document.getElementById('mobileCartHeader')
+    ];
+
+    cartElements.forEach(element => {
+        if (element) {
+            element.textContent = cartText;
+        }
+    });
 }
 
 function updateCartCount() {
-    fetch('{% url "cart:cart_count" %}')
-        .then(response => response.json())
-        .then(data => {
-            updateHeaderCartCount(data.total_items);
-        });
+    fetch('{% url "cart:cart_count" %}', {
+        method: 'GET',
+        credentials: 'include'
+    })
+    .then(response => {
+        if (!response.ok) {
+            // Если запрос не удался, используем сохраненное значение
+            const savedCount = loadCartCountFromStorage();
+            return { total_items: savedCount };
+        }
+        return response.json();
+    })
+    .then(data => {
+        updateHeaderCartCount(data.total_items);
+    })
+    .catch(error => {
+        console.error('Error fetching cart count:', error);
+        // При ошибке используем сохраненное значение
+        loadCartCountFromStorage();
+    });
 }
+
+// Обновляем счетчик при возвращении на вкладку
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        updateCartCount();
+    }
+});
+
+// Также обновляем при фокусе на окно
+window.addEventListener('focus', updateCartCount);
+
+// Синхронизация между вкладками
+window.addEventListener('storage', function(e) {
+    if (e.key === 'cartCount') {
+        updateHeaderCartCount(parseInt(e.newValue || '0'));
+    }
+});
 
 function openCart() {
     htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
@@ -678,52 +737,51 @@ function openCart() {
     }
 });
 
-// Add to Cart Function
 function addToCart() {
-    const productSlug = '{{ product.slug }}';
-    console.log('Product Slug:', productSlug);
+        const productSlug = '{{ product.slug }}';
+        console.log('Product Slug:', productSlug);
 
-    // Update selected size before sending
-    updateSelectedSize();
-    console.log('Selected Size ID:', selectedSizeId);
+        // Update selected size before sending
+        updateSelectedSize();
+        console.log('Selected Size ID:', selectedSizeId);
 
-    if (!selectedSizeId) {
-        showNotification('Please select a size');
-        return;
+        if (!selectedSizeId) {
+            showNotification('Please select a size');
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append('size_id', selectedSizeId);
+        formData.append('quantity', '1');
+        fetch(`{% url 'cart:add_to_cart' 'PLACEHOLDER' %}`.replace('PLACEHOLDER', productSlug), {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            console.log('Response Status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response Data:', data);
+            if (data.error) {
+                showNotification(data.error);
+            } else {
+                updateHeaderCartCount(data.total_items);
+                showNotification(data.message);
+                htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                    target: '#cart-container',
+                    swap: 'innerHTML'
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error adding to cart');
+        });
     }
-
-    let formData = new FormData();
-    formData.append('size_id', selectedSizeId);
-    formData.append('quantity', '1');
-    fetch(`{% url 'cart:add_to_cart' 'PLACEHOLDER' %}`.replace('PLACEHOLDER', productSlug), {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
-        }
-    })
-    .then(response => {
-        console.log('Response Status:', response.status);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Response Data:', data);
-        if (data.error) {
-            showNotification(data.error);
-        } else {
-            updateHeaderCartCount(data.total_items);
-            showNotification(data.message);
-            htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
-                target: '#cart-container',
-                swap: 'innerHTML'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showNotification('Error adding to cart');
-    });
-}
 
 function getCookie(name) {
     let cookieValue = null;
@@ -738,6 +796,24 @@ function getCookie(name) {
         }
     }
     return cookieValue;
+}
+
+// Альтернативная функция для получения CSRF токена
+function getCSRFToken() {
+    // Пытаемся получить из hidden input
+    const inputToken = document.getElementById('csrf-token');
+    if (inputToken) return inputToken.value;
+
+    // Пытаемся получить из meta тега
+    const metaToken = document.querySelector('meta[name="csrf-token"]');
+    if (metaToken) return metaToken.getAttribute('content');
+
+    // Пытаемся получить из cookie
+    const tokenFromCookie = getCookie('csrftoken');
+    if (tokenFromCookie) return tokenFromCookie;
+
+    console.error('CSRF token not found');
+    return null;
 }
 
 function showNotification(message) {
@@ -760,6 +836,10 @@ function showNotification(message) {
 
 // Основная функция инициализации
 function initializeProductPage() {
+    // Сначала загружаем из хранилища, потом обновляем с сервера
+    loadCartCountFromStorage();
+    updateCartCount();
+
     setTimeout(() => {
         initializeImageGallery();
         initializeSizeRadios();
@@ -796,6 +876,6 @@ document.addEventListener('htmx:afterSwap', function(event) {
 });
 window.addEventListener('load', initializeProductPage);
 setTimeout(initializeProductPage, 1000);
-    </script>
+</script>
 </main>
 {% endblock %}

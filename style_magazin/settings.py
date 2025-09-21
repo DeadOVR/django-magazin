@@ -142,5 +142,5 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-SESSION_COOKIE_AGE = 86400 # 30 дней (хранения cookie)
-SESSION_SAVE_EVERY_REQUEST = True # Сохранение после каждого запроса
+SESSION_COOKIE_AGE = 86400 # 30 дней
+SESSION_SAVE_EVERY_REQUEST = True

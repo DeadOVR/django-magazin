@@ -417,6 +417,7 @@
     </style>
 
     {% block extra_css %}{% endblock %}
+
 </head>
 <body class="bg-white flex flex-col min-h-screen prevent-overflow">
     {% include 'main/header.html' %}
@@ -434,44 +435,43 @@
     {% include 'main/footer.html' %}
 
     <script>
-        (function() {
-    let menuInitialized = false;
-    let isCartOpen = false;
-    let desktopCart, mobileCart, mobileCartHeader;
+     document.addEventListener('DOMContentLoaded', function() {
+    // Mobile menu functionality
+    const menuToggle = document.getElementById('menuToggle');
+    const closeMenu = document.getElementById('closeMenu');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('overlay');
 
-    function initCart() {
-        // Cart functionality
-        desktopCart = document.getElementById('desktopCart');
-        mobileCart = document.getElementById('mobileCart');
-        mobileCartHeader = document.getElementById('mobileCartHeader');
-
-        console.log('Cart script loaded');
-        console.log('Elements found:', {
-            desktopCart: !!desktopCart,
-            mobileCart: !!mobileCart,
-            mobileCartHeader: !!mobileCartHeader
-        });
-
-        // Get initial cart count
-        updateCartCount();
-
-        // Привязка обработчиков открытия корзины
-        [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
-            if (cartLink) {
-                cartLink.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Cart clicked, open:', isCartOpen);
-
-                    if (isCartOpen) {
-                        closeCart();
-                    } else {
-                        openCart();
-                    }
-                });
-            }
-        });
+    function openMobileMenu() {
+        mobileMenu.classList.add('open');
+        overlay.classList.add('active');
+        menuToggle.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
+
+    function closeMobileMenu() {
+        mobileMenu.classList.remove('open');
+        overlay.classList.remove('active');
+        menuToggle.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    if (menuToggle) menuToggle.addEventListener('click', openMobileMenu);
+    if (closeMenu) closeMenu.addEventListener('click', closeMobileMenu);
+    if (overlay) overlay.addEventListener('click', closeMobileMenu);
+
+    // Close mobile menu after navigation
+    document.addEventListener('htmx:afterRequest', function() {
+        closeMobileMenu();
+    });
+
+    // Cart functionality - ОБНОВЛЕННЫЙ КОД
+    const desktopCart = document.getElementById('desktopCart');
+    const mobileCart = document.getElementById('mobileCart');
+    const mobileCartHeader = document.getElementById('mobileCartHeader');
+
+    // Get initial cart count
+    updateCartCount();
 
     function updateHeaderCartCount(count) {
         const cartText = `КОРЗИНА (${count})`;
@@ -489,61 +489,35 @@
     }
 
     function openCart() {
-        if (isCartOpen) return;
-        console.log('Opening cart...');
-
         htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
             target: '#cart-container',
             swap: 'innerHTML'
         });
-
-        isCartOpen = true;
-        console.log('Opening cart, isCartOpen:', isCartOpen);
     }
 
-    function closeCart() {
-        if (!isCartOpen) return;
-        console.log('Closing cart...');
-
-        // Ваша логика закрытия корзины
-        isCartOpen = false;
-        console.log('Closing cart, isCartOpen:', isCartOpen);
-    }
-
-    function initMobileMenu() {
-        if (menuInitialized) return;
-
-        const menuToggle = document.getElementById('menuToggle');
-        const closeMenu = document.getElementById('closeMenu');
-        const mobileMenu = document.getElementById('mobileMenu');
-        const overlay = document.getElementById('overlay');
-
-        if (!menuToggle || !mobileMenu) return;
-
-        function openMobileMenu() {
-            mobileMenu.classList.add('open');
-            overlay.classList.add('active');
-            menuToggle.classList.add('active');
-            document.body.style.overflow = 'hidden';
+    [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
+        if (cartLink) {
+            cartLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openCart();
+            });
         }
+    });
+    // КОНЕЦ ОБНОВЛЕННОГО КОДА КОРЗИНЫ
 
-        function closeMobileMenu() {
-            mobileMenu.classList.remove('open');
-            overlay.classList.remove('active');
-            menuToggle.classList.remove('active');
-            document.body.style.overflow = '';
+    // Close mobile menu on window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 768) {
+            closeMobileMenu();
         }
+    });
 
-        menuToggle.removeEventListener('click', openMobileMenu);
-        closeMenu.removeEventListener('click', closeMobileMenu);
-        overlay.removeEventListener('click', closeMobileMenu);
-
-        menuToggle.addEventListener('click', openMobileMenu);
-        closeMenu.addEventListener('click', closeMobileMenu);
-        overlay.addEventListener('click', closeMobileMenu);
-
-        menuInitialized = true;
-    }
+    // Update active navigation links after HTMX requests
+    document.addEventListener('htmx:afterSettle', function() {
+        updateActiveNavLinks();
+        // Переустановка обработчиков корзины после HTMX
+        setupCartFunctionality();
+    });
 
     function updateActiveNavLinks() {
         const currentPath = window.location.pathname;
@@ -557,62 +531,71 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        initMobileMenu();
-        updateActiveNavLinks();
-        initCart(); // Инициализация корзины
-    });
-
-    document.addEventListener('htmx:afterSettle', function() {
-        initMobileMenu();
-        updateActiveNavLinks();
-        initCart(); // Переинициализация после htmx-запросов
-    });
-
-    document.addEventListener('htmx:afterRequest', function() {
-        const mobileMenu = document.getElementById('mobileMenu');
-        const overlay = document.getElementById('overlay');
-        const menuToggle = document.getElementById('menuToggle');
-
-        if (mobileMenu && mobileMenu.classList.contains('open')) {
-            mobileMenu.classList.remove('open');
-            overlay.classList.remove('active');
-            menuToggle.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
-
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) {
-            const mobileMenu = document.getElementById('mobileMenu');
-            const overlay = document.getElementById('overlay');
-            const menuToggle = document.getElementById('menuToggle');
-
-            if (mobileMenu && mobileMenu.classList.contains('open')) {
-                mobileMenu.classList.remove('open');
-                overlay.classList.remove('active');
-                menuToggle.classList.remove('active');
-                document.body.style.overflow = '';
-            }
-        }
-    });
-
+    // Listen for cart updates
     document.addEventListener('cartUpdated', function(e) {
         if (e.detail && e.detail.total_items !== undefined) {
             updateHeaderCartCount(e.detail.total_items);
         }
     });
+});
 
-    window.getDropdownClass = function() {
-        const width = window.innerWidth;
-        if (width < 768) return 'mobile';
-        if (width < 1024) return 'tablet';
-        if (width < 1280) return 'desktop';
-        return 'large';
-    };
+// Функция для переустановки обработчиков после HTMX
+function setupCartFunctionality() {
+    const desktopCart = document.getElementById('desktopCart');
+    const mobileCart = document.getElementById('mobileCart');
+    const mobileCartHeader = document.getElementById('mobileCartHeader');
 
-})();
-    </script>
+    // Удаляем старые обработчики (если есть)
+    [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
+        if (cartLink) {
+            cartLink.onclick = null;
+            cartLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                openCart();
+            });
+        }
+    });
+
+    // Обновляем счетчик корзины
+    updateCartCount();
+}
+
+function updateCartCount() {
+    fetch('{% url "cart:cart_count" %}')
+        .then(response => response.json())
+        .then(data => {
+            updateHeaderCartCount(data.total_items);
+        })
+        .catch(error => console.error('Error updating cart count:', error));
+}
+
+function openCart() {
+    htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+        target: '#cart-container',
+        swap: 'innerHTML'
+    });
+}
+
+// Global function to update cart count
+window.updateHeaderCartCount = function(count) {
+    const desktopCart = document.getElementById('desktopCart');
+    const mobileCart = document.getElementById('mobileCart');
+    const mobileCartHeader = document.getElementById('mobileCartHeader');
+    const cartText = `КОРЗИНА (${count})`;
+
+    if (desktopCart) desktopCart.textContent = cartText;
+    if (mobileCart) mobileCart.textContent = cartText;
+    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+};
+
+window.getDropdownClass = function() {
+    const width = window.innerWidth;
+    if (width < 768) return 'mobile';
+    if (width < 1024) return 'tablet';
+    if (width < 1280) return 'desktop';
+    return 'large';
+};
+</script>
 
     {% block extra_js %}{% endblock %}
 </body>
