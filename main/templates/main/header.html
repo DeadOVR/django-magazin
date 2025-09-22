@@ -105,9 +105,13 @@
         </nav>
 
         <div class="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
-            <a class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
-                АККАУНТ
-            </a>
+            <a href="{% url 'users:profile' %}"
+                hx-get="{% url 'users:profile' %}"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
+                    АККАУНТ
+                </a>
             <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
         </div>
     </div>
@@ -260,7 +264,11 @@
     </div>
 </div>
 
-                <a class="text-xs xs:text-sm lg:text-base font-medium text-gray-900 uppercase hover:text-gray-600 adaptive-text">
+                <a href="{% url 'users:profile' %}"
+                hx-get="{% url 'users:profile' %}"
+                hx-target="#main-content"
+                hx-push-url="true"
+                class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
                     АККАУНТ
                 </a>
                 <a href="#" id="desktopCart" class="text-xs xs:text-sm lg:text-base font-medium text-gray-900 hover:text-gray-700 adaptive-text">КОРЗИНА (0)</a>
