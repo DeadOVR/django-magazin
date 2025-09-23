@@ -27,15 +27,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'coolsait.ru', 'www.coolsait.ru']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://127.0.0.1:8000'
-    'http://localhost:8000'
-    'http://coolsait.ru'
-    'http://www.coolsait.ru'
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+    'http://coolsait.ru',
+    'http://www.coolsait.ru',
 ]
 
 CSRF_COOKIE_SECURE = True
