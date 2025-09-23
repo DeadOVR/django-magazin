@@ -1,0 +1,72 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block title %}
+    Политика конфиденциальности
+{% endblock %}
+
+{% block content %}
+<div class="content-card w-full max-w-4xl p-6 sm:p-8">
+        <!-- Заголовок и кнопка назад -->
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Политика конфиденциальности</h1>
+        </div>
+
+        <!-- Дата обновления -->
+        <div class="bg-green-50 p-4 rounded-lg mb-6">
+            <p class="text-green-700 text-sm"><i class="fas fa-shield-alt mr-2"></i>Последнее обновление: 22 сентября 2025 г.</p>
+        </div>
+
+        <!-- Содержание -->
+        <div class="prose max-w-none">
+            <div class="mb-8">
+                <h2 class="section-title text-xl font-semibold text-gray-800 mb-4">1. Общие положения</h2>
+                <p class="text-gray-700 mb-4">Настоящая Политика конфиденциальности регулирует порядок обработки и использования персональных данных пользователей сайта.</p>
+                <p class="text-gray-700">Целью политики является обеспечение защиты прав и свобод человека и гражданина при обработке его персональных данных.</p>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="section-title text-xl font-semibold text-gray-800 mb-4">2. Собираемая информация</h2>
+                <p class="text-gray-700 mb-4">Мы можем собирать следующую информацию:</p>
+
+                <div class="mb-4">
+                    <span class="privacy-badge"><i class="fas fa-user mr-1"></i> Личные данные</span>
+                    <span class="privacy-badge"><i class="fas fa-envelope mr-1"></i> Контактная информация</span>
+                    <span class="privacy-badge"><i class="fas fa-cookie mr-1"></i> Данные cookies</span>
+                </div>
+
+                <p class="text-gray-700">Мы не собираем специальные категории персональных данных, касающиеся расовой или этнической принадлежности, политических взглядов, религиозных или философских убеждений.</p>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="section-title text-xl font-semibold text-gray-800 mb-4">3. Использование информации</h2>
+                <p class="text-gray-700 mb-4">Собранная информация используется для следующих целей:</p>
+                <ul class="list-disc pl-5 text-gray-700 mb-4">
+                    <li>Предоставление и персонализация наших услуг</li>
+                    <li>Обработка запросов и обращений</li>
+                    <li>Улучшение качества нашего сайта и услуг</li>
+                    <li>Отправка информационных сообщений (с согласия пользователя)</li>
+                </ul>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="section-title text-xl font-semibold text-gray-800 mb-4">4. Защита данных</h2>
+                <p class="text-gray-700 mb-4">Мы принимаем необходимые организационные и технические меры для защиты персональных данных от неправомерного или случайного доступа, уничтожения, изменения, блокирования, копирования, распространения.</p>
+
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <p class="text-blue-700 text-sm"><i class="fas fa-lock mr-2"></i>Мы используем современные методы шифрования и защиты данных для обеспечения безопасности вашей информации.</p>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="section-title text-xl font-semibold text-gray-800 mb-4">5. Cookies и аналитика</h2>
+                <p class="text-gray-700 mb-4">Мы используем файлы cookie для улучшения работы сайта, анализа трафика и персонализации контента.</p>
+                <p class="text-gray-700">Пользователь может отключить использование cookie в настройках своего браузера, однако это может повлиять на функциональность сайта.</p>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg mt-8">
+                <p class="text-gray-700 text-sm"><i class="fas fa-question-circle mr-2 text-blue-500"></i>Если у вас есть вопросы о нашей политике конфиденциальности, пожалуйста, свяжитесь с нами: <a href="mailto:support@example.com" class="text-green-600 hover:underline">support@example.com</a></p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

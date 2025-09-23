@@ -12,4 +12,7 @@ urlpatterns = [
 
     path('search/', views.search, name='search'),
     path('search/suggestions/', views.search_suggestions, name='search_suggestions'),
+
+    path('terms/', views.terms, name='terms'),
+    path('privacy/', views.privacy, name='privacy'),
 ]

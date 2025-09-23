@@ -1,13 +1,38 @@
 <div class="border-t border-gray-200 pt-4">
     <div class="flex justify-between text-sm font-medium mb-4">
         <span>ИТОГО:</span>
-        <span>₽{{ cart.subtotal|floatformat:2 }}</span>
+        <span>${{ cart.subtotal|floatformat:2 }}</span>
     </div>
-    <a href="#"
-       hx-get="#"
-       hx-target="#main-content"
-       hx-push-url="true"
-       class="w-full block bg-black text-white py-3 px-6 text-sm font-medium text-center uppercase hover:bg-gray-800 transition-colors">
+    <button onclick="proceedToCheckout()"
+       class="w-full bg-black text-white py-3 px-6 text-sm font-medium text-center uppercase hover:bg-gray-800 transition-colors">
         Оплата
-    </a>
+    </button>
 </div>
+
+<script>
+// Функция для закрытия корзины при переходе к оплате
+function proceedToCheckout() {
+    // Закрываем корзину с анимацией вправо
+    const modal = document.getElementById('cart-modal');
+    const overlay = document.getElementById('cart-overlay');
+
+    if (modal && overlay) {
+        modal.classList.remove('open');
+        modal.classList.add('closing-right');
+        overlay.classList.remove('open');
+        overlay.classList.add('closed');
+
+        // Добавляем небольшую задержку перед переходом к оплате
+        setTimeout(() => {
+            // Выполняем переход к оплате через HTMX
+            htmx.ajax('GET', '{% url "orders:checkout" %}', {
+                target: '#main-content',
+                swap: 'innerHTML',
+                onLoad: function() {
+                    history.pushState(null, '', '{% url "orders:checkout" %}');
+                }
+            });
+        }, 200);
+    }
+}
+</script>

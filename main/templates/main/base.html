@@ -5,415 +5,471 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}ENFANTS RICHES DÉPRIMÉS{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon/favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+
+    <!-- Для поддержки разных браузеров -->
+    <link rel="shortcut icon" href="{% static 'favicon/favicon.ico' %}">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-        :root {
-            --safe-area-inset-top: env(safe-area-inset-top);
-            --safe-area-inset-right: env(safe-area-inset-right);
-            --safe-area-inset-bottom: env(safe-area-inset-bottom);
-            --safe-area-inset-left: env(safe-area-inset-left);
-        }
+:root {
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            padding-left: var(--safe-area-inset-left);
-            padding-right: var(--safe-area-inset-right);
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+}
 
-        .product-image {
-            transition: transform 0.3s ease;
-        }
+.product-image {
+    transition: transform 0.3s ease;
+}
 
-        .product-card:hover .product-image {
-            transform: scale(1.05);
-        }
+.product-card:hover .product-image {
+    transform: scale(1.05);
+}
 
-        .nav-link {
-            position: relative;
-            transition: all 0.3s ease;
-        }
+.nav-link {
+    position: relative;
+    transition: all 0.3s ease;
+}
 
-        .nav-link:hover::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background-color: black;
-        }
+.nav-link:hover::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: black;
+}
 
-        .nav-link.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 100%;
-            height: 1px;
-            background-color: black;
-        }
+.nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: black;
+}
 
-        /* Mobile menu styles */
-        .mobile-menu {
-            transform: translateX(-100%);
-            transition: transform 0.3s ease-in-out;
-            padding-top: var(--safe-area-inset-top);
-            padding-left: var(--safe-area-inset-left);
-            padding-right: var(--safe-area-inset-right);
-            padding-bottom: var(--safe-area-inset-bottom);
-        }
+/* Mobile menu styles */
+.mobile-menu {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    padding-top: var(--safe-area-inset-top);
+    padding-left: var(--safe-area-inset-left);
+    padding-right: var(--safe-area-inset-right);
+    padding-bottom: var(--safe-area-inset-bottom);
+}
 
-        .mobile-menu.open {
-            transform: translateX(0);
-        }
+.mobile-menu.open {
+    transform: translateX(0);
+}
 
-        .hamburger {
-            cursor: pointer;
-        }
+.hamburger {
+    cursor: pointer;
+}
 
-        .hamburger span {
-            display: block;
-            width: 25px;
-            height: 2px;
-            background-color: black;
-            margin: 5px 0;
-            transition: 0.3s;
-        }
+.hamburger span {
+    display: block;
+    width: 25px;
+    height: 2px;
+    background-color: black;
+    margin: 5px 0;
+    transition: 0.3s;
+}
 
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(-45deg) translate(-5px, 6px);
-        }
+.hamburger.active span:nth-child(1) {
+    transform: rotate(-45deg) translate(-5px, 6px);
+}
 
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
 
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(45deg) translate(-5px, -6px);
-        }
+.hamburger.active span:nth-child(3) {
+    transform: rotate(45deg) translate(-5px, -6px);
+}
 
-        /* Overlay */
-        .overlay {
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease-in-out;
-        }
+/* Overlay */
+.overlay {
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease-in-out;
+}
 
-        .overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
 
-        /* Search styles */
-        .search-container {
-            position: relative;
-            display: inline-block;
-        }
+/* Search styles */
+.search-container {
+    position: relative;
+    display: inline-block;
+}
 
-        .search-dropdown {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            z-index: 50;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
+.search-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
 
-        .search-dropdown.mobile {
-            width: 100vw;
-            left: 50%;
-            right: auto;
-            transform: translateX(-50%);
-            max-width: 95vw;
-        }
+.search-dropdown.mobile {
+    width: 100vw;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    max-width: 95vw;
+}
 
-        .search-dropdown.tablet {
-            width: 400px;
-            right: -50%;
-            transform: translateX(50%);
-        }
+.search-dropdown.tablet {
+    width: 400px;
+    right: -50%;
+    transform: translateX(50%);
+}
 
-        .search-dropdown.desktop {
-            width: 400px;
-            right: 0;
-        }
+.search-dropdown.desktop {
+    width: 400px;
+    right: 0;
+}
 
-        .search-dropdown.large {
-            width: 500px;
-            right: 0;
-        }
+.search-dropdown.large {
+    width: 500px;
+    right: 0;
+}
 
-        .search-result-item {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem;
-            border-bottom: 1px solid #f3f4f6;
-            transition: background-color 0.2s;
-        }
+.search-result-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    transition: background-color 0.2s;
+}
 
-        .search-result-item:hover {
-            background-color: #f9fafb;
-        }
+.search-result-item:hover {
+    background-color: #f9fafb;
+}
 
-        .search-result-item:last-child {
-            border-bottom: none;
-        }
+.search-result-item:last-child {
+    border-bottom: none;
+}
 
-        .search-result-image {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            margin-right: 0.75rem;
-            border-radius: 0.25rem;
-        }
+.search-result-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    margin-right: 0.75rem;
+    border-radius: 0.25rem;
+}
 
-        .search-result-info {
-            flex: 1;
-            min-width: 0;
-        }
+.search-result-info {
+    flex: 1;
+    min-width: 0;
+}
 
-        .search-result-name {
-            font-weight: 500;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
+.search-result-name {
+    font-weight: 500;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-        .search-result-price {
-            font-size: 0.875rem;
-            color: #374151;
-        }
+.search-result-price {
+    font-size: 0.875rem;
+    color: #374151;
+}
 
-        .no-results {
-            padding: 1rem;
-            text-align: center;
-            color: #6b7280;
-        }
+.no-results {
+    padding: 1rem;
+    text-align: center;
+    color: #6b7280;
+}
 
-        .view-all-results {
-            display: block;
-            padding: 0.75rem;
-            text-align: center;
-            background-color: #f9fafb;
-            color: #374151;
-            font-weight: 500;
-            border-top: 1px solid #e5e7eb;
-            transition: background-color 0.2s;
-        }
+.view-all-results {
+    display: block;
+    padding: 0.75rem;
+    text-align: center;
+    background-color: #f9fafb;
+    color: #374151;
+    font-weight: 500;
+    border-top: 1px solid #e5e7eb;
+    transition: background-color 0.2s;
+}
 
-        .view-all-results:hover {
-            background-color: #f3f4f6;
-        }
+.view-all-results:hover {
+    background-color: #f3f4f6;
+}
 
-        .search-input {
-            transition: all 0.3s ease;
-            border: 1px solid #e5e7eb;
-        }
+.search-input {
+    transition: all 0.3s ease;
+    border: 1px solid #e5e7eb;
+}
 
-        .search-input:focus {
-            outline: none;
-            border-color: #000;
-            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
-        }
+.search-input:focus {
+    outline: none;
+    border-color: #000;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
 
-        .search-button {
-            transition: all 0.3s ease;
-        }
+.search-button {
+    transition: all 0.3s ease;
+}
 
-        .search-button:hover {
-            background-color: #000;
-            color: white;
-        }
+.search-button:hover {
+    background-color: #000;
+    color: white;
+}
 
-        .search-inputs-container {
-            display: flex;
-            gap: 0.5rem;
-            padding: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.search-inputs-container {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-        .search-input-flex {
-            display: flex;
-            gap: 0.5rem;
-            width: 100%;
-        }
+.search-input-flex {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
 
-        .search-input {
-            flex: 1;
-            min-width: 0;
-            padding: 0.5rem 0.75rem;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-        }
+.search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+}
 
-        .search-button {
-            padding: 0.5rem 1rem;
-            background-color: black;
-            color: white;
-            border: none;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
+.search-button {
+    padding: 0.5rem 1rem;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
 
-        .mobile-search-container {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-            width: 100%;
-            box-sizing: border-box;
-        }
+.mobile-search-container {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    width: 100%;
+    box-sizing: border-box;
+}
 
-        .mobile-search-form {
-            display: flex;
-            gap: 0.5rem;
-            width: 100%;
-        }
+.mobile-search-form {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
 
-        .mobile-search-input {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            min-width: 0;
-        }
+.mobile-search-input {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    min-width: 0;
+}
 
-        .mobile-search-button {
-            padding: 0.5rem 1rem;
-            background-color: black;
-            color: white;
-            border: none;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            cursor: pointer;
-            white-space: nowrap;
-        }
+.mobile-search-button {
+    padding: 0.5rem 1rem;
+    background-color: black;
+    color: white;
+    border: none;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
 
-        @media (max-width: 320px) {
-            .search-input-flex {
-                flex-direction: column;
-            }
-            .search-button {
-                width: 100%;
-            }
-            .mobile-search-form {
-                flex-direction: column;
-            }
-            .mobile-search-button {
-                width: 100%;
-            }
-        }
+/* Cookies Consent Styles */
+.cookies-visible {
+    transform: translateY(0) !important;
+}
 
-        @media (min-width: 768px) {
-            .search-dropdown.mobile {
-                display: none;
-            }
-        }
+.cookies-hidden {
+    display: none !important;
+}
 
-        @media (max-width: 767px) {
-            .search-dropdown:not(.mobile) {
-                display: none;
-            }
-            .search-inputs-container {
-                padding: 0.75rem;
-            }
-        }
+#cookies-consent {
+    z-index: 9999; /* Обеспечиваем поверх всех элементов */
+}
 
-        @media (min-width: 768px) and (max-width: 1023px) {
-            .search-dropdown.tablet {
-                width: 350px;
-            }
-        }
+/* Адаптивные стили для cookies уведомления */
+@media (max-width: 640px) {
+    #cookies-consent {
+        padding: 1rem;
+    }
+    #cookies-consent .flex-col {
+        text-align: center;
+    }
+    #cookies-consent .flex-col .flex {
+        margin-top: 0.5rem;
+    }
+}
 
-        @media (min-width: 1024px) and (max-width: 1279px) {
-            .search-dropdown.desktop {
-                width: 400px;
-            }
-        }
+@media (max-width: 320px) {
+    .search-input-flex {
+        flex-direction: column;
+    }
+    .search-button {
+        width: 100%;
+    }
+    .mobile-search-form {
+        flex-direction: column;
+    }
+    .mobile-search-button {
+        width: 100%;
+    }
 
-        @media (min-width: 1280px) {
-            .search-dropdown.large {
-                width: 450px;
-            }
-        }
+    /* Адаптация cookies для очень маленьких экранов */
+    #cookies-consent {
+        padding: 0.75rem;
+    }
+    #cookies-consent .text-sm {
+        font-size: 0.75rem;
+    }
+    #cookies-consent button {
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}
 
-        .htmx-indicator {
-            opacity: 0;
-            transition: opacity 200ms ease-in;
-        }
-        .htmx-request .htmx-indicator {
-            opacity: 1;
-        }
-        .htmx-request.htmx-indicator {
-            opacity: 1;
-        }
+@media (min-width: 768px) {
+    .search-dropdown.mobile {
+        display: none;
+    }
+}
 
-        .footer-link {
-            transition: opacity 0.3s ease;
-        }
+@media (max-width: 767px) {
+    .search-dropdown:not(.mobile) {
+        display: none;
+    }
+    .search-inputs-container {
+        padding: 0.75rem;
+    }
+}
 
-        .footer-link:hover {
-            opacity: 0.7;
-        }
+@media (min-width: 768px) and (max-width: 1023px) {
+    .search-dropdown.tablet {
+        width: 350px;
+    }
+}
 
-        @media (max-width: 320px) {
-            .adaptive-text {
-                font-size: 0.8rem;
-            }
-            .logo-text {
-                font-size: 0.9rem;
-            }
-            .container-padding {
-                padding-left: 0.75rem;
-                padding-right: 0.75rem;
-            }
-        }
+@media (min-width: 1024px) and (max-width: 1279px) {
+    .search-dropdown.desktop {
+        width: 400px;
+    }
+}
 
-        @media (min-width: 1920px) {
-            .xl-container {
-                max-width: 1440px;
-                margin-left: auto;
-                margin-right: auto;
-            }
-        }
+@media (min-width: 1280px) {
+    .search-dropdown.large {
+        width: 450px;
+    }
 
-        .prevent-overflow {
-            overflow-x: hidden;
-        }
+    /* Адаптация cookies для больших экранов */
+    #cookies-consent {
+        padding-left: calc(var(--safe-area-inset-left) + 2rem);
+        padding-right: calc(var(--safe-area-inset-right) + 2rem);
+    }
+}
 
-        @media (max-width: 640px) {
-            .mobile-text-sm {
-                font-size: 0.875rem;
-            }
-            .mobile-leading-tight {
-                line-height: 1.25;
-            }
-        }
+.htmx-indicator {
+    opacity: 0;
+    transition: opacity 200ms ease-in;
+}
+.htmx-request .htmx-indicator {
+    opacity: 1;
+}
+.htmx-request.htmx-indicator {
+    opacity: 1;
+}
 
-        .responsive-image {
-            max-width: 100%;
-            height: auto;
-        }
+.footer-link {
+    transition: opacity 0.3s ease;
+}
 
-        .responsive-heading {
-            font-size: clamp(1.5rem, 5vw, 3rem);
-        }
+.footer-link:hover {
+    opacity: 0.7;
+}
 
-        .responsive-subheading {
-            font-size: clamp(1rem, 2.5vw, 1.5rem);
-        }
+@media (max-width: 320px) {
+    .adaptive-text {
+        font-size: 0.8rem;
+    }
+    .logo-text {
+        font-size: 0.9rem;
+    }
+    .container-padding {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+}
+
+@media (min-width: 1920px) {
+    .xl-container {
+        max-width: 1440px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+
+.prevent-overflow {
+    overflow-x: hidden;
+}
+
+@media (max-width: 640px) {
+    .mobile-text-sm {
+        font-size: 0.875rem;
+    }
+    .mobile-leading-tight {
+        line-height: 1.25;
+    }
+}
+
+.responsive-image {
+    max-width: 100%;
+    height: auto;
+}
+
+.responsive-heading {
+    font-size: clamp(1.5rem, 5vw, 3rem);
+}
+
+.responsive-subheading {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+}
     </style>
 
     {% block extra_css %}{% endblock %}
@@ -434,167 +490,336 @@
 
     {% include 'main/footer.html' %}
 
+    {% include 'main/cookies_consent.html' %}
     <script>
-     document.addEventListener('DOMContentLoaded', function() {
-    // Mobile menu functionality
-    const menuToggle = document.getElementById('menuToggle');
-    const closeMenu = document.getElementById('closeMenu');
-    const mobileMenu = document.getElementById('mobileMenu');
-    const overlay = document.getElementById('overlay');
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded - initializing cart functionality');
 
-    function openMobileMenu() {
-        mobileMenu.classList.add('open');
-        overlay.classList.add('active');
-        menuToggle.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
+    // Cart functionality
+    function setupCartFunctionality() {
+        console.log('Setting up cart functionality...');
 
-    function closeMobileMenu() {
-        mobileMenu.classList.remove('open');
-        overlay.classList.remove('active');
-        menuToggle.classList.remove('active');
-        document.body.style.overflow = '';
-    }
+        const desktopCart = document.getElementById('desktopCart');
+        const mobileCart = document.getElementById('mobileCart');
+        const mobileCartHeader = document.getElementById('mobileCartHeader');
 
-    if (menuToggle) menuToggle.addEventListener('click', openMobileMenu);
-    if (closeMenu) closeMenu.addEventListener('click', closeMobileMenu);
-    if (overlay) overlay.addEventListener('click', closeMobileMenu);
+        // Получаем начальное значение из серверного рендеринга
+        const initialCount = parseInt('{{ cart.total_items|default:0 }}') || 0;
+        console.log('Initial cart count from server:', initialCount);
 
-    // Close mobile menu after navigation
-    document.addEventListener('htmx:afterRequest', function() {
-        closeMobileMenu();
-    });
+        // Сразу обновляем интерфейс серверным значением
+        updateHeaderCartCount(initialCount);
 
-    // Cart functionality - ОБНОВЛЕННЫЙ КОД
-    const desktopCart = document.getElementById('desktopCart');
-    const mobileCart = document.getElementById('mobileCart');
-    const mobileCartHeader = document.getElementById('mobileCartHeader');
+        // Затем обновляем актуальными данными с сервера
+        updateCartCount();
 
-    // Get initial cart count
-    updateCartCount();
-
-    function updateHeaderCartCount(count) {
-        const cartText = `КОРЗИНА (${count})`;
-        if (desktopCart) desktopCart.textContent = cartText;
-        if (mobileCart) mobileCart.textContent = cartText;
-        if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-    }
-
-    function updateCartCount() {
-        fetch('{% url "cart:cart_count" %}')
-            .then(response => response.json())
+        function updateCartCount() {
+            console.log('Fetching live cart count...');
+            fetch('{% url "cart:cart_count" %}', {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network error');
+                return response.json();
+            })
             .then(data => {
-                updateHeaderCartCount(data.total_items);
-            });
-    }
-
-    function openCart() {
-        htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
-            target: '#cart-container',
-            swap: 'innerHTML'
-        });
-    }
-
-    [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
-        if (cartLink) {
-            cartLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openCart();
+                const liveCount = data.total_items || 0;
+                console.log('Live cart count received:', liveCount);
+                updateHeaderCartCount(liveCount);
+            })
+            .catch(error => {
+                console.error('Error updating cart count:', error);
+                // Оставляем серверное значение в случае ошибки
             });
         }
-    });
-    // КОНЕЦ ОБНОВЛЕННОГО КОДА КОРЗИНЫ
 
-    // Close mobile menu on window resize
-    window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) {
-            closeMobileMenu();
+        function updateHeaderCartCount(count) {
+            console.log('Updating cart count to:', count);
+            const cartText = `КОРЗИНА (${count})`;
+
+            // Обновляем текст ссылок
+            if (desktopCart) desktopCart.textContent = cartText;
+            if (mobileCart) mobileCart.textContent = cartText;
+            if (mobileCartHeader) mobileCartHeader.textContent = cartText;
+
+            // Обновляем отдельные span элементы
+            updateCartCountSpans(count);
         }
-    });
 
-    // Update active navigation links after HTMX requests
-    document.addEventListener('htmx:afterSettle', function() {
-        updateActiveNavLinks();
-        // Переустановка обработчиков корзины после HTMX
-        setupCartFunctionality();
-    });
+        function updateCartCountSpans(count) {
+            const mobileCartCount = document.getElementById('mobileCartCount');
+            const desktopCartCount = document.getElementById('desktopCartCount');
+            const cartCount = document.getElementById('cart-count');
 
-    function updateActiveNavLinks() {
-        const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.nav-link, .mobile-nav-link');
+            if (mobileCartCount) mobileCartCount.textContent = count;
+            if (desktopCartCount) desktopCartCount.textContent = count;
+            if (cartCount) cartCount.textContent = count;
+        }
 
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
+        function openCart() {
+            console.log('Opening cart...');
+
+            const existingModal = document.getElementById('cart-modal');
+            if (existingModal) {
+                if (window.openCartModal) {
+                    window.openCartModal();
+                }
+                return;
+            }
+
+            htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
+                target: '#cart-container',
+                swap: 'innerHTML',
+                onLoad: function() {
+                    // Обновляем счетчик после загрузки корзины
+                    setTimeout(updateCartCount, 500);
+                }
+            });
+        }
+
+        // Добавляем обработчики для кнопок корзины
+        const cartLinks = [desktopCart, mobileCart, mobileCartHeader];
+        cartLinks.forEach(cartLink => {
+            if (cartLink) {
+                cartLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    openCart();
+                });
+                cartLink.style.cursor = 'pointer';
             }
         });
+
+        // Периодическое обновление счетчика
+        setInterval(updateCartCount, 30000);
+
+        // Глобальные функции
+        window.updateHeaderCartCount = updateHeaderCartCount;
+        window.updateCartCount = updateCartCount;
+
+        console.log('Cart functionality setup completed');
     }
 
-    // Listen for cart updates
-    document.addEventListener('cartUpdated', function(e) {
-        if (e.detail && e.detail.total_items !== undefined) {
-            updateHeaderCartCount(e.detail.total_items);
+    // Cookies functionality - ОБНОВЛЕННАЯ ВЕРСИЯ С ДЕБАГОМ
+    function setupCookiesConsent() {
+        console.log('=== COOKIES CONSENT DEBUG ===');
+
+        const cookiesConsent = document.getElementById('cookies-consent');
+        const acceptCookies = document.getElementById('accept-cookies');
+        const rejectCookies = document.getElementById('reject-cookies');
+
+        console.log('Cookies consent element:', cookiesConsent);
+        console.log('Accept button:', acceptCookies);
+        console.log('Reject button:', rejectCookies);
+
+        if (!cookiesConsent) {
+            console.error('❌ Cookies consent element not found! Check HTML structure');
+            return;
         }
-    });
-});
+        if (!acceptCookies) console.error('❌ Accept cookies button not found!');
+        if (!rejectCookies) console.error('❌ Reject cookies button not found!');
 
-// Функция для переустановки обработчиков после HTMX
-function setupCartFunctionality() {
-    const desktopCart = document.getElementById('desktopCart');
-    const mobileCart = document.getElementById('mobileCart');
-    const mobileCartHeader = document.getElementById('mobileCartHeader');
+        // Проверяем CSS классы
+        console.log('Cookies consent classes:', cookiesConsent.className);
+        console.log('Has cookies-hidden class:', cookiesConsent.classList.contains('cookies-hidden'));
+        console.log('Has cookies-visible class:', cookiesConsent.classList.contains('cookies-visible'));
 
-    // Удаляем старые обработчики (если есть)
-    [desktopCart, mobileCart, mobileCartHeader].forEach(cartLink => {
-        if (cartLink) {
-            cartLink.onclick = null;
-            cartLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                openCart();
+        // Проверяем, было ли уже принято решение
+        const cookiesDecision = getCookie('cookies_decision');
+        console.log('Cookies decision from cookie:', cookiesDecision);
+
+        if (!cookiesDecision) {
+            console.log('✅ No cookies decision found - showing consent banner');
+            // Показываем уведомление через 1 секунду после загрузки
+            setTimeout(() => {
+                console.log('Showing cookies consent now...');
+                cookiesConsent.classList.remove('cookies-hidden');
+                cookiesConsent.classList.add('cookies-visible');
+                console.log('After showing - classes:', cookiesConsent.className);
+
+                // Дополнительная проверка стилей
+                const styles = window.getComputedStyle(cookiesConsent);
+                console.log('Computed transform:', styles.transform);
+                console.log('Computed display:', styles.display);
+                console.log('Computed opacity:', styles.opacity);
+            }, 1000);
+        } else {
+            console.log('ℹ️ Cookies decision already made:', cookiesDecision);
+            if (cookiesDecision === 'accepted') {
+                initializeAnalytics();
+            }
+        }
+
+        // Обработчик принятия cookies
+        if (acceptCookies) {
+            acceptCookies.addEventListener('click', function() {
+                console.log('✅ Cookies accepted');
+                setCookie('cookies_decision', 'accepted', 365);
+                hideCookiesConsent(cookiesConsent);
+                initializeAnalytics();
             });
         }
+
+        // Обработчик отклонения cookies
+        if (rejectCookies) {
+            rejectCookies.addEventListener('click', function() {
+                console.log('❌ Cookies rejected');
+                setCookie('cookies_decision', 'rejected', 30);
+                hideCookiesConsent(cookiesConsent);
+                clearAnalyticsCookies();
+            });
+        }
+    }
+
+    function hideCookiesConsent(element) {
+        console.log('Hiding cookies consent...');
+        element.classList.remove('cookies-visible');
+        setTimeout(() => {
+            element.classList.add('cookies-hidden');
+        }, 300);
+    }
+
+    // Функции для работы с cookies
+    function setCookie(name, value, days) {
+        const expires = new Date();
+        expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+        console.log('Cookie set:', name, value);
+    }
+
+    function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(';');
+        for(let i = 0; i < ca.length; i++) {
+            let c = ca[i];
+            while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) === 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
+    }
+
+    function deleteCookie(name) {
+        document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+        console.log('Cookie deleted:', name);
+    }
+
+    function clearAnalyticsCookies() {
+        // Удаляем cookies аналитики
+        const analyticsCookies = ['_ga', '_gat', '_gid', '_fbp', '_fbc'];
+        analyticsCookies.forEach(cookie => deleteCookie(cookie));
+
+        // Останавливаем отслеживание если оно было инициализировано
+        if (window.gtag) {
+            window.gtag('consent', 'update', {
+                'analytics_storage': 'denied'
+            });
+            console.log('Google Analytics tracking disabled');
+        }
+
+        // Facebook Pixel
+        if (typeof fbq !== 'undefined') {
+            fbq('consent', 'revoke');
+            console.log('Facebook Pixel tracking disabled');
+        }
+
+        // Очищаем localStorage
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('cookies_accepted');
+        }
+
+        console.log('Analytics cookies cleared');
+    }
+
+    function initializeAnalytics() {
+        // Инициализация аналитики только если cookies приняты
+        const cookiesAccepted = getCookie('cookies_decision') === 'accepted';
+
+        if (cookiesAccepted) {
+            // Google Analytics
+            if (typeof gtag !== 'undefined') {
+                gtag('consent', 'update', {
+                    'analytics_storage': 'granted'
+                });
+                console.log('Google Analytics tracking enabled');
+            }
+
+            // Facebook Pixel
+            if (typeof fbq !== 'undefined') {
+                fbq('consent', 'grant');
+                console.log('Facebook Pixel tracking enabled');
+            }
+
+            // Сохраняем в localStorage для быстрого доступа
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('cookies_accepted', 'true');
+            }
+
+            console.log('All analytics services initialized');
+        } else {
+            console.log('Analytics not initialized - cookies not accepted');
+        }
+    }
+
+    // Проверяем согласие при загрузке страницы
+    function checkCookiesConsent() {
+        const decision = getCookie('cookies_decision');
+        if (decision === 'accepted') {
+            initializeAnalytics();
+        }
+    }
+
+    // Инициализируем оба функционала
+    setupCartFunctionality();
+    setupCookiesConsent();
+    checkCookiesConsent();
+
+    console.log('All functionality initialized');
+
+    // Переустановка после HTMX
+    document.addEventListener('htmx:afterSettle', function() {
+        console.log('HTMX settled - reinitializing functionality');
+        setTimeout(function() {
+            setupCartFunctionality();
+            setupCookiesConsent();
+        }, 100);
     });
 
-    // Обновляем счетчик корзины
-    updateCartCount();
-}
+    // Глобальные функции для доступа из других скриптов
+    window.getCookie = getCookie;
+    window.setCookie = setCookie;
+    window.initializeAnalytics = initializeAnalytics;
+    window.clearAnalyticsCookies = clearAnalyticsCookies;
 
-function updateCartCount() {
-    fetch('{% url "cart:cart_count" %}')
-        .then(response => response.json())
-        .then(data => {
-            updateHeaderCartCount(data.total_items);
-        })
-        .catch(error => console.error('Error updating cart count:', error));
-}
+    // Функция для принудительного показа (для тестирования)
+    window.showCookiesConsent = function() {
+        const cookiesConsent = document.getElementById('cookies-consent');
+        if (cookiesConsent) {
+            cookiesConsent.classList.remove('cookies-hidden');
+            cookiesConsent.classList.add('cookies-visible');
+        }
+    };
 
-function openCart() {
-    htmx.ajax('GET', '{% url "cart:cart_modal" %}', {
-        target: '#cart-container',
-        swap: 'innerHTML'
-    });
-}
+    // Функция для принудительного скрытия (для тестирования)
+    window.hideCookiesConsent = function() {
+        const cookiesConsent = document.getElementById('cookies-consent');
+        if (cookiesConsent) {
+            cookiesConsent.classList.remove('cookies-visible');
+            cookiesConsent.classList.add('cookies-hidden');
+        }
+    };
 
-// Global function to update cart count
-window.updateHeaderCartCount = function(count) {
-    const desktopCart = document.getElementById('desktopCart');
-    const mobileCart = document.getElementById('mobileCart');
-    const mobileCartHeader = document.getElementById('mobileCartHeader');
-    const cartText = `КОРЗИНА (${count})`;
-
-    if (desktopCart) desktopCart.textContent = cartText;
-    if (mobileCart) mobileCart.textContent = cartText;
-    if (mobileCartHeader) mobileCartHeader.textContent = cartText;
-};
-
-window.getDropdownClass = function() {
-    const width = window.innerWidth;
-    if (width < 768) return 'mobile';
-    if (width < 1024) return 'tablet';
-    if (width < 1280) return 'desktop';
-    return 'large';
-};
+    // Функция для сброса cookies решения (для тестирования)
+    window.resetCookiesDecision = function() {
+        deleteCookie('cookies_decision');
+        deleteCookie('cookies_analytics');
+        console.log('Cookies decision reset');
+    };
+});
 </script>
 
     {% block extra_js %}{% endblock %}

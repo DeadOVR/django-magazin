@@ -37,71 +37,126 @@
 <div id="cart-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 transition-all duration-300"></div>
 
 <style>
+    #cart-modal {
+        transform: translateX(100%);
+        transition: transform 0.3s ease-in-out;
+    }
+
+    #cart-modal.open {
+        transform: translateX(0);
+    }
+
+    #cart-modal.closed {
+        transform: translateX(100%);
+    }
+
+    #cart-modal.closing-right {
+        transform: translateX(100%);
+    }
 
     #cart-overlay {
         opacity: 0;
         visibility: hidden;
+        transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
     }
+
     #cart-overlay.open {
         opacity: 1;
         visibility: visible;
     }
+
     #cart-overlay.closed {
         opacity: 0;
         visibility: hidden;
     }
+
+    /* Адаптивные стили */
+    @media (max-width: 640px) {
+        #cart-modal {
+            width: 100%;
+            max-width: 100%;
+        }
+    }
 </style>
 
 <script>
-    function openCart() {
+    console.log('Cart modal template loaded');
+
+    // Функция для открытия корзины
+    function openCartModal() {
+        console.log('openCartModal function called');
         const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
-        if (modal && overlay) {
-            modal.classList.remove('closed');
+        const cartOverlay = document.getElementById('cart-overlay');
+
+        console.log('Modal element:', modal);
+        console.log('Overlay element:', cartOverlay);
+
+        if (modal && cartOverlay) {
+            modal.classList.remove('closed', 'closing-right');
             modal.classList.add('open');
-            overlay.classList.remove('closed');
-            overlay.classList.add('open');
-            console.log('Cart modal opened');
+            cartOverlay.classList.remove('closed');
+            cartOverlay.classList.add('open');
+            console.log('Cart modal opened successfully');
         } else {
-            console.error('Cart modal or overlay not found');
+            console.error('Modal or overlay not found');
         }
     }
 
-    function closeCart() {
+    // Функция для закрытия корзины
+    function closeCart(direction = 'left') {
         const modal = document.getElementById('cart-modal');
-        const overlay = document.getElementById('cart-overlay');
-        if (modal && overlay) {
+        const cartOverlay = document.getElementById('cart-overlay');
+
+        if (modal && cartOverlay) {
             modal.classList.remove('open');
-            modal.classList.add('closed');
-            overlay.classList.remove('open');
-            overlay.classList.add('closed');
-            console.log('Cart modal closed');
+            cartOverlay.classList.remove('open');
+
+            if (direction === 'right') {
+                modal.classList.add('closing-right');
+            } else {
+                modal.classList.add('closed');
+            }
+            cartOverlay.classList.add('closed');
+
             setTimeout(() => {
                 const container = document.getElementById('cart-container');
                 if (container) {
                     container.innerHTML = '';
                 }
             }, 300);
-        } else {
-            console.error('Cart modal or overlay not found');
         }
     }
 
-    // Trigger open animation when modal is loaded via HTMX
+    // Функция для перехода к оплате
+    function proceedToCheckout() {
+        closeCart('right');
+
+        setTimeout(() => {
+            htmx.ajax('GET', '{% url "orders:checkout" %}', {
+                target: '#main-content',
+                swap: 'innerHTML'
+            });
+        }, 200);
+    }
+
+    // Сделаем функцию глобальной
+    window.openCartModal = openCartModal;
+
+    // Автоматическое открытие при загрузке
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Cart modal DOM loaded');
+        setTimeout(openCartModal, 100);
+    });
+
+    // HTMX обработчик
     document.addEventListener('htmx:afterSwap', function(evt) {
-        console.log('HTMX afterSwap event triggered', evt.detail.elt.id);
+        console.log('HTMX afterSwap in cart modal', evt.detail.elt.id);
         if (evt.detail.elt.id === 'cart-modal') {
-            console.log('Cart modal loaded, triggering open animation');
-            openCart();
+            console.log('Cart modal swapped, opening...');
+            setTimeout(openCartModal, 100);
         }
     });
 
-    // Fallback: Try opening cart on DOMContentLoaded if modal exists
-    document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('cart-modal');
-        if (modal) {
-            console.log('Cart modal found on DOMContentLoaded, triggering open animation');
-            openCart();
-        }
-    });
+    // Также попробуем открыть сразу после загрузки скрипта
+    setTimeout(openCartModal, 200);
 </script>

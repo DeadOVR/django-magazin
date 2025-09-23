@@ -1,0 +1,13 @@
+<!-- payment/stripe_cancel.html -->
+{% extends "main/base.html" %}
+{% load static %}
+
+{% block title %}Order Cancelled{% endblock title %}
+
+{% block content %}
+    <div class="container">
+        <h1>Payment Cancelled</h1>
+        <p>Your payment was cancelled.</p>
+        <a href="{% url 'main:index' %}">Return to Home</a>
+    </div>
+{% endblock content %}

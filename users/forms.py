@@ -10,24 +10,24 @@ User = get_user_model()
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-               'placeholder': 'EMAIL'}))
+               'placeholder': 'электронная почта'}))
     first_name = forms.CharField(required=True, max_length=50, widget=forms.TextInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-               'placeholder': 'FIRST NAME'}))
+               'placeholder': 'имя'}))
     last_name = forms.CharField(required=True, max_length=50, widget=forms.TextInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-               'placeholder': 'LAST NAME'}))
+               'placeholder': 'фамилия'}))
     password1 = forms.CharField(
         required=True,
         widget=forms.PasswordInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'PASSWORD'})
+                   'placeholder': 'пароль'})
     )
     password2 = forms.CharField(
         required=True,
         widget=forms.PasswordInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'CONFIRM PASSWORD'})
+                   'placeholder': 'подтвердите пароль'})
     )
 
     class Meta:
@@ -37,7 +37,7 @@ class CustomUserCreationForm(UserCreationForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
-            raise forms.ValidationError('This email is already in use.')
+            raise forms.ValidationError('Это электронное почта уже используется.')
         return email
 
     def save(self, commit=True):
@@ -51,12 +51,12 @@ class CustomUserCreationForm(UserCreationForm):
 class CustomUserLoginForm(AuthenticationForm):
     username = forms.CharField(label="Email", widget=forms.TextInput(
         attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-               'placeholder': 'EMAIL'}))
+               'placeholder': 'электронная почта'}))
     password = forms.CharField(
         label="Password",
         widget=forms.PasswordInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'PASSWORD'})
+                   'placeholder': 'пароль'})
     )
 
     def clean(self):
@@ -66,9 +66,9 @@ class CustomUserLoginForm(AuthenticationForm):
         if email and password:
             self.user_cache = authenticate(self.request, email=email, password=password)
             if self.user_cache is None:
-                raise forms.ValidationError('Invalid email or password.')
-            elif not self.user_cache.is_active():
-                raise forms.ValidationError('This account is inactive.')
+                raise forms.ValidationError('Неверный адрес электронной почты или пароль.')
+            elif not self.user_cache.is_active:
+                raise forms.ValidationError('Эта учетная запись неактивна.')
         return self.cleaned_data
 
 
@@ -78,27 +78,27 @@ class CustomUserUpdateForm(forms.ModelForm):
         validators=[RegexValidator(r'^\+?1?\d{9,15}$', "Enter a valid phone number.")],
         widget=forms.TextInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'PHONE NUMBER'})
+                   'placeholder': 'номер телефона'})
     )
     first_name = forms.CharField(
         required=True,
         max_length=50,
         widget=forms.TextInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'FIRST NAME'})
+                   'placeholder': 'имя'})
     )
     last_name = forms.CharField(
         required=True,
         max_length=50,
         widget=forms.TextInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'LAST NAME'})
+                   'placeholder': 'фамилия'})
     )
     email = forms.EmailField(
         required=False,
         widget=forms.EmailInput(
             attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                   'placeholder': 'EMAIL'})
+                   'placeholder': 'электронная почта'})
     )
 
     class Meta:
@@ -109,31 +109,31 @@ class CustomUserUpdateForm(forms.ModelForm):
         widgets = {
             'company': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'COMPANY'}),
+                       'placeholder': 'компания'}),
             'address1': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'ADDRESS LINE 1'}),
+                       'placeholder': 'адресная строка 1'}),
             'address2': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'ADDRESS LINE 2'}),
+                       'placeholder': 'АДРЕСНАЯ СТРОКА 2'}),
             'city': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'CITY'}),
+                       'placeholder': 'город'}),
             'country': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'COUNTRY'}),
+                       'placeholder': 'страна'}),
             'province': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'PROVINCE'}),
+                       'placeholder': 'провинция'}),
             'postal_code': forms.TextInput(
                 attrs={'class': 'dotted-input w-full py-3 text-sm font-medium text-gray-900 placeholder-gray-500',
-                       'placeholder': 'POSTAL CODE'}),
+                       'placeholder': 'почтовый индекс'}),
         }
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exclude(id=self.instance.id).exists():
-            raise forms.ValidationError('This email is alredy in use.')
+            raise forms.ValidationError('Это электронное почта уже используется.')
         return email
 
     def clean(self):

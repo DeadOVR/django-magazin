@@ -45,7 +45,7 @@
                                hx-target="#main-content" 
                                hx-push-url="true"
                                class="flex items-center text-gray-700 font-semibold text-sm tracking-wide hover:text-gray-900 {% if request.resolver_match.url_name == 'profile' %}text-gray-900 border-l-4 border-gray-500 pl-2{% endif %}">
-                                ACCOUNT
+                                АККАУНТ
                             </a>
                         </li>
                         <li class="nav-item">
@@ -53,7 +53,7 @@
                                hx-target="#main-content" 
                                hx-push-url="true"
                                class="flex items-center text-gray-700 font-semibold text-sm tracking-wide hover:text-gray-900 {% if request.resolver_match.url_name == 'order_history' %}text-gray-900 border-l-4 border-gray-500 pl-2{% endif %}">
-                                ORDER HISTORY
+                                ИСТОРИЯ ЗАКАЗОВ
                             </a>
                         </li>
                         <li class="nav-item">
@@ -62,7 +62,7 @@
                                hx-target="#main-content" 
                                hx-push-url="true"
                                class="flex items-center text-gray-700 font-semibold text-sm tracking-wide hover:text-gray-900">
-                                LOG OUT
+                                ВЫЙТИ ИЗ СИСТЕМЫ
                             </a>
                         </li>
                     </ul>
@@ -107,13 +107,13 @@
                     <!-- Account Details -->
                     <div class="bg-white p-6 rounded-lg shadow-lg card" id="account-details-content">
                         <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">
-                            ACCOUNT DETAILS
+                            ДАННЫЕ УЧЕТНОЙ ЗАПИСИ
                         </h2>
                         <div class="space-y-2">
-                            <p class="text-sm text-gray-700">Default Address</p>
+                            <p class="text-sm text-gray-700">адрес по умолчанию</p>
                             <p class="text-sm text-gray-700">{{ request.user.first_name }} {{ request.user.last_name }}</p>
                             <p class="text-sm text-gray-700">{{ request.user.address1|default:"" }} {{ request.user.address2|default:"" }}</p>
-                            <p class="text-sm text-gray-700">{{ request.user.city|default:"" }}, {{ request.user.country|default:"Not specified" }}</p>
+                            <p class="text-sm text-gray-700">{{ request.user.city|default:"" }}, {{ request.user.country|default:"Не указан" }}</p>
                         </div>
                         <div class="mt-4 flex gap-4">
                             <button 
@@ -122,12 +122,12 @@
                                 hx-swap="innerHTML"
                                 class="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 transition-colors duration-200 text-sm tracking-wide"
                             >
-                                Edit
+                                Редактировать
                             </button>
                             <button 
                                 class="border-2 border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-semibold py-2 px-4 transition-colors duration-200 text-sm tracking-wide"
                             >
-                                Delete
+                                Удалить
                             </button>
                         </div>
                     </div>
@@ -136,7 +136,7 @@
                 <!-- Recommendations -->
                 <div class="mt-8">
                     <h2 class="text-xl font-semibold text-gray-900 mb-4 tracking-wide">
-                        YOU MAY ALSO LIKE
+                        ВАМ ТАКЖЕ МОЖЕТ ПОНРАВИТЬСЯ
                     </h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {% for product in recommended_products %}
@@ -149,19 +149,20 @@
                                     {% endif %}
                                 </div>
                                 <h3 class="text-sm font-semibold text-gray-900">{{ product.name }}</h3>
-                                <p class="text-sm text-gray-700">€{{ product.price }}</p>
+                                <p class="text-sm text-gray-700">${{ product.price }}</p>
                                 <a 
-                                    href="{% url 'main:product_detail' product.slug %}" 
-                                    hx-get="{% url 'main:product_detail' product.slug %}" 
-                                    hx-target="#main-content" 
+                                    href="{% url 'main:product_detail' product.slug %}"
+                                    hx-get="{% url 'main:product_detail' product.slug %}"
+                                    hx-target="#main-content"
                                     hx-push-url="true"
+                                    hx-select="main"
                                     class="mt-2 inline-block bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-4 transition-colors duration-200 text-sm tracking-wide"
                                 >
-                                    CHOOSE OPTIONS
+                                    ВЫБЕРИТЕ ПАРАМЕТРЫ
                                 </a>
                             </div>
                         {% empty %}
-                            <p class="text-sm text-gray-700">No recommended products available at the moment.</p>
+                            <p class="text-sm text-gray-700">На данный момент рекомендуемых продуктов в наличии нет.</p>
                         {% endfor %}
                     </div>
                 </div>

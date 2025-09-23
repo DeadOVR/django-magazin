@@ -183,3 +183,11 @@ def search_suggestions(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'results': []}, status=500)
+
+
+def terms(request):
+    return render(request, 'main/terms.html')
+
+
+def privacy(request):
+    return render(request, 'main/privacy.html')

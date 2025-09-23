@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'main.apps.MainConfig',
     'cart.apps.CartConfig',
     'users.apps.UsersConfig',
+    'orders.apps.OrdersConfig',
+    'payment.apps.PaymentConfig',
 ]
 
 MIDDLEWARE = [
@@ -57,6 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'cart.middleware.CartMiddleware',
+    'main.middleware.CookiesConsentMiddleware',
 ]
 
 ROOT_URLCONF = 'style_magazin.urls'
@@ -132,7 +135,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
 
 
 MEDIA_URL = '/media/'
@@ -148,3 +153,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+
+# Настройки платежных систем
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')

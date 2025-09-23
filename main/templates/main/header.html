@@ -76,7 +76,7 @@
                                     <div class="search-result-name text-sm font-medium text-gray-900 truncate"
                                          x-text="product.name"></div>
                                     <div class="search-result-price text-sm text-gray-500"
-                                         x-text="(product.price || '0') + '₽'"></div>
+                                         x-text="(product.price || '0') + '$'"></div>
                                 </div>
                             </div>
                         </a>
@@ -112,7 +112,13 @@
                 class="text-sm font-medium text-gray-900 uppercase hover:text-gray-600">
                     АККАУНТ
                 </a>
-            <a href="#" id="mobileCart" class="block text-sm font-medium text-gray-900 hover:text-gray-700 py-2">КОРЗИНА (0)</a>
+            <div class="md:hidden">
+                <a href="#"
+                   id="mobileCart"
+                   class="text-xs font-medium text-gray-900 adaptive-text">
+                    КОРЗИНА (<span id="mobileCart">{{ cart.total_items }}</span>)
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -241,7 +247,7 @@
                                     <div class="search-result-name text-sm font-medium text-gray-900 truncate"
                                          x-text="product.name"></div>
                                     <div class="search-result-price text-sm text-gray-500"
-                                         x-text="(product.price || '0') + '₽'"></div>
+                                         x-text="(product.price || '0') + '$'"></div>
                                 </div>
                             </div>
                         </a>
@@ -276,7 +282,11 @@
 
             <!-- Mobile Cart Icon -->
             <div class="md:hidden">
-                <a href="#" id="mobileCartHeader" class="text-xs font-medium text-gray-900 adaptive-text">КОРЗИНА (0)</a>
+                <a href="#"
+                   id="mobileCartHeader"
+                   class="text-xs font-medium text-gray-900 adaptive-text">
+                    КОРЗИНА (<span id="mobileCartCount">{{ cart.total_items }}</span>)
+                </a>
             </div>
         </div>
     </div>

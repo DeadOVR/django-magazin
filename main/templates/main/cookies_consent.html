@@ -1,0 +1,19 @@
+<!-- templates/main/cookies_consent.html -->
+<div id="cookies-consent" class="fixed bottom-0 left-0 right-0 bg-black text-white p-4 z-50 transform translate-y-full transition-transform duration-300 cookies-hidden" style="padding-left: var(--safe-area-inset-left); padding-right: var(--safe-area-inset-right);">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex-1">
+            <p class="text-sm mobile-text-sm">
+                Мы используем файлы cookie для улучшения работы сайта.
+                <a href="{% url 'main:privacy' %}" class="underline hover:no-underline">Политика конфиденциальности</a>
+            </p>
+        </div>
+        <div class="flex gap-3 flex-wrap justify-center">
+            <button id="reject-cookies" class="px-4 py-2 text-sm border border-white hover:bg-white hover:text-black transition-colors mobile-text-sm">
+                Отклонить
+            </button>
+            <button id="accept-cookies" class="px-4 py-2 text-sm bg-white text-black hover:bg-gray-200 transition-colors mobile-text-sm">
+                Принять
+            </button>
+        </div>
+    </div>
+</div>

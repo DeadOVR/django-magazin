@@ -32,3 +32,6 @@ media/
 
 # VS Code (на всякий случай, если кто-то использует параллельно)
 .vscode/
+
+# static files
+static/
