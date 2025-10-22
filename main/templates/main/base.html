@@ -491,9 +491,79 @@ body {
     {% include 'main/footer.html' %}
 
     {% include 'main/cookies_consent.html' %}
-    <script>
+        <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing cart functionality');
+
+    // Mobile menu functionality - ДОБАВЛЕНО
+    function setupMobileMenu() {
+        console.log('Setting up mobile menu...');
+
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.querySelector('.mobile-menu');
+        const overlay = document.querySelector('.overlay');
+
+        console.log('Menu toggle element:', menuToggle);
+        console.log('Mobile menu element:', mobileMenu);
+        console.log('Overlay element:', overlay);
+
+        if (!menuToggle || !mobileMenu || !overlay) {
+            console.error('❌ Mobile menu elements not found!');
+            return;
+        }
+
+        function toggleMenu() {
+            console.log('Toggling mobile menu...');
+
+            const isOpen = mobileMenu.classList.contains('open');
+            console.log('Menu is currently open:', isOpen);
+
+            // Toggle menu
+            mobileMenu.classList.toggle('open');
+            overlay.classList.toggle('active');
+            menuToggle.classList.toggle('active');
+
+            // Prevent body scroll when menu is open
+            document.body.style.overflow = isOpen ? '' : 'hidden';
+
+            console.log('Menu toggled successfully');
+        }
+
+        // Add click event to menu toggle
+        menuToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Menu toggle clicked');
+            toggleMenu();
+        });
+
+        // Close menu when clicking on overlay
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                console.log('Overlay clicked - closing menu');
+                toggleMenu();
+            }
+        });
+
+        // Close menu when clicking on links (optional)
+        const menuLinks = mobileMenu.querySelectorAll('a');
+        menuLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                console.log('Menu link clicked - closing menu');
+                toggleMenu();
+            });
+        });
+
+        // Close menu on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                console.log('Escape key pressed - closing menu');
+                toggleMenu();
+            }
+        });
+
+        console.log('Mobile menu functionality setup completed');
+    }
 
     // Cart functionality
     function setupCartFunctionality() {
@@ -773,7 +843,96 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Инициализируем оба функционала
+
+
+function setupMobileMenu() {
+    console.log('Setting up mobile menu...');
+
+    const menuToggle = document.getElementById('menuToggle');
+    const closeMenu = document.getElementById('closeMenu'); // ← ДОБАВЛЕНО
+    const mobileMenu = document.querySelector('.mobile-menu');
+    const overlay = document.querySelector('.overlay');
+
+    console.log('Menu toggle element:', menuToggle);
+    console.log('Close menu element:', closeMenu); // ← ДОБАВЛЕНО
+    console.log('Mobile menu element:', mobileMenu);
+    console.log('Overlay element:', overlay);
+
+    if (!menuToggle || !mobileMenu || !overlay) {
+        console.error('❌ Mobile menu elements not found!');
+        return;
+    }
+
+    function toggleMenu() {
+        console.log('Toggling mobile menu...');
+
+        const isOpen = mobileMenu.classList.contains('open');
+        console.log('Menu is currently open:', isOpen);
+
+        // Toggle menu
+        mobileMenu.classList.toggle('open');
+        overlay.classList.toggle('active');
+        menuToggle.classList.toggle('active');
+
+        // Также переключаем кнопку закрытия
+        if (closeMenu) {
+            closeMenu.classList.toggle('active');
+        }
+
+        // Prevent body scroll when menu is open
+        document.body.style.overflow = isOpen ? '' : 'hidden';
+
+        console.log('Menu toggled successfully');
+    }
+
+    // Add click event to menu toggle
+    menuToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Menu toggle clicked');
+        toggleMenu();
+    });
+
+    // Add click event to close menu button - ДОБАВЛЕНО
+    if (closeMenu) {
+        closeMenu.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('Close menu button clicked');
+            toggleMenu();
+        });
+    }
+
+    // Close menu when clicking on overlay
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+            console.log('Overlay clicked - closing menu');
+            toggleMenu();
+        }
+    });
+
+    // Close menu when clicking on links (optional)
+    const menuLinks = mobileMenu.querySelectorAll('a');
+    menuLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            console.log('Menu link clicked - closing menu');
+            toggleMenu();
+        });
+    });
+
+    // Close menu on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+            console.log('Escape key pressed - closing menu');
+            toggleMenu();
+        }
+    });
+
+    console.log('Mobile menu functionality setup completed');
+}
+
+    // Инициализируем все функционалы - ДОБАВЛЕНО mobile menu
+    setupMobileMenu(); // ← ВЫЗОВ ДОБАВЛЕН
     setupCartFunctionality();
     setupCookiesConsent();
     checkCookiesConsent();
@@ -784,6 +943,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('htmx:afterSettle', function() {
         console.log('HTMX settled - reinitializing functionality');
         setTimeout(function() {
+            setupMobileMenu(); // ← ПЕРЕИНИЦИАЛИЗАЦИЯ ДОБАВЛЕНА
             setupCartFunctionality();
             setupCookiesConsent();
         }, 100);
